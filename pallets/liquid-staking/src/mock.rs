@@ -1,14 +1,18 @@
 use crate as pallet_liquid_staking;
-use frame_support::traits::{ConstU16, ConstU64, GenesisBuild, };
-use frame_system as system;
+use frame_support::{
+	traits::{ConstU16, ConstU64, },
+	PalletId, parameter_types,
+};
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
+	BuildStorage,
 };
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
+type BalanceImpl = u128;
 
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
@@ -19,19 +23,29 @@ frame_support::construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		LiquidStakingModule: pallet_liquid_staking::{Pallet, Call, Storage, Event<T>},
-		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+		MainBalances: pallet_balances::<Instance1>::{Pallet, Call, Storage, Config<T>, Event<T>},
+		DerivativeBalances: pallet_balances::<Instance2>::{Pallet, Call, Storage, Config<T>, Event<T>},
 	}
 );
 
-impl crate::pallet::pallet::Config for Test {
-	type Event = Event;
+parameter_types! {
+	pub const LiquidStakingPalletId: PalletId = PalletId(*b"py/lstkg");
+	pub static ExistentialDeposit: BalanceImpl = 0;
 }
 
-impl pallet_balances::Config for Test {
+impl crate::pallet::Config for Test {
+	type Event = Event;
+	type PalletId = LiquidStakingPalletId;
+	type MainCurrency = MainBalances;
+	type DerivativeCurrency = DerivativeBalances;
+}
+
+type MainToken = pallet_balances::Instance1;
+impl pallet_balances::Config<MainToken> for Test {
 	type MaxLocks = frame_support::traits::ConstU32<1024>;
 	type MaxReserves = ();
 	type ReserveIdentifier = [u8; 8];
-	type Balance = Balance;
+	type Balance = BalanceImpl;
 	type Event = Event;
 	type DustRemoval = ();
 	type ExistentialDeposit = ExistentialDeposit;
@@ -39,7 +53,20 @@ impl pallet_balances::Config for Test {
 	type WeightInfo = ();
 }
 
-impl system::Config for Test {
+type DerivativeToken = pallet_balances::Instance2;
+impl pallet_balances::Config<DerivativeToken> for Test {
+	type MaxLocks = frame_support::traits::ConstU32<1024>;
+	type MaxReserves = ();
+	type ReserveIdentifier = [u8; 8];
+	type Balance = BalanceImpl;
+	type Event = Event;
+	type DustRemoval = ();
+	type ExistentialDeposit = ExistentialDeposit;
+	type AccountStore = System;
+	type WeightInfo = ();
+}
+
+impl frame_system::Config for Test {
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = ();
 	type BlockLength = ();
@@ -57,7 +84,7 @@ impl system::Config for Test {
 	type BlockHashCount = ConstU64<250>;
 	type Version = ();
 	type PalletInfo = PalletInfo;
-	type AccountData = ();
+	type AccountData = pallet_balances::AccountData<BalanceImpl>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
@@ -67,16 +94,21 @@ impl system::Config for Test {
 }
 
 // Build genesis storage according to the mock runtime.
-pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
-	let _ = pallet_balances::GenesisConfig::<Test> {
-		balances: vec![
-			(1, 10),
-			// controller
-			(10, 0),
-			// stashe
-			(11, 0),
-			],
+pub fn new_test_ext(users: Vec<(u64, u128, u128)>) -> sp_io::TestExternalities {
+	let mut storage = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	GenesisConfig {
+		main_balances: MainBalancesConfig {
+			balances: users.iter().map(|(account_id, main_balance, _)| (*account_id, *main_balance) ).collect(),
+		},
+		derivative_balances: DerivativeBalancesConfig {
+			balances: users.iter().map(|(account_id, _, derivative_balances)| (*account_id, *derivative_balances) ).collect(),
+		},
+		..Default::default()
 	}
-	.assimilate_storage(&mut storage);
+	.assimilate_storage(&mut storage)
+	.unwrap();
+	
+	let mut externalities = sp_io::TestExternalities::new(storage);
+	externalities.execute_with(|| System::set_block_number(1));
+	externalities
 }

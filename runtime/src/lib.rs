@@ -33,8 +33,9 @@ pub use frame_support::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		IdentityFee, Weight,
 	},
-	StorageValue,
+	StorageValue, PalletId,
 };
+
 pub use frame_system::Call as SystemCall;
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
@@ -234,36 +235,67 @@ impl pallet_timestamp::Config for Runtime {
 	type WeightInfo = ();
 }
 
-impl pallet_balances::Config for Runtime {
-	type MaxLocks = ConstU32<50>;
+type MainToken = pallet_balances::Instance1;
+impl pallet_balances::Config<MainToken> for Runtime {
+	type MaxLocks = frame_support::traits::ConstU32<1024>;
 	type MaxReserves = ();
 	type ReserveIdentifier = [u8; 8];
-	/// The type for recording an account's balance.
-	type Balance = Balance;
-	/// The ubiquitous event type.
+	type Balance = u128;
 	type Event = Event;
 	type DustRemoval = ();
-	type ExistentialDeposit = ConstU128<500>;
+	type ExistentialDeposit = Self::ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
 }
 
+// TODO
+// impl pallet_transaction_payment::Config<MainToken> for Runtime {
 impl pallet_transaction_payment::Config for Runtime {
 	type Event = Event;
-	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
+	type OnChargeTransaction = CurrencyAdapter<MainBalances, ()>;
 	type OperationalFeeMultiplier = ConstU8<5>;
-	type WeightToFee = IdentityFee<Balance>;
-	type LengthToFee = IdentityFee<Balance>;
+	type WeightToFee = IdentityFee<pallet_liquid_staking::BalanceTypeOf<Self>>;
+	type LengthToFee = IdentityFee<pallet_liquid_staking::BalanceTypeOf<Self>>;
 	type FeeMultiplierUpdate = ();
 }
+
+type DerivativeToken = pallet_balances::Instance2;
+impl pallet_balances::Config<DerivativeToken> for Runtime {
+	type MaxLocks = frame_support::traits::ConstU32<1024>;
+	type MaxReserves = ();
+	type ReserveIdentifier = [u8; 8];
+	type Balance = u128;
+	type Event = Event;
+	type DustRemoval = ();
+	type ExistentialDeposit = Self::ExistentialDeposit;
+	type AccountStore = System;
+	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
+}
+
+// TODO 
+// impl pallet_transaction_payment::Config<DerivativeToken> for Runtime {
+// 	type Event = Event;
+// 	type OnChargeTransaction = CurrencyAdapter<DerivativeBalances, ()>;
+// 	type OperationalFeeMultiplier = ConstU8<5>;
+// 	type WeightToFee = IdentityFee<pallet_liquid_staking::BalanceTypeOf<Self>>;
+// 	type LengthToFee = IdentityFee<pallet_liquid_staking::BalanceTypeOf<Self>>;
+// 	type FeeMultiplierUpdate = ();
+// }
 
 impl pallet_sudo::Config for Runtime {
 	type Event = Event;
 	type Call = Call;
 }
 
+parameter_types! {
+	pub const LiquidStakingPalletId: PalletId = PalletId(*b"py/lstkg");
+}
+
 impl pallet_liquid_staking::Config for Runtime {
 	type Event = Event;
+	type MainCurrency = pallet_liquid_staking::BalanceTypeOf<Self>;
+	type DerivativeCurrency = pallet_liquid_staking::BalanceTypeOf<Self>;
+	type PalletId = LiquidStakingPalletId;	
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
@@ -278,12 +310,15 @@ construct_runtime!(
 		Timestamp: pallet_timestamp,
 		Aura: pallet_aura,
 		Grandpa: pallet_grandpa,
-		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
 		Sudo: pallet_sudo,
 
 		// Include the custom logic from the liquid-staking module in the runtime.
-		LiquidStakingModule: pallet_liquid_staking
+		LiquidStakingModule: pallet_liquid_staking::{Pallet, Call, Storage, Event<T>},
+		MainBalances: pallet_balances::<Instance1>::{Pallet, Call, Storage, Config<T>, Event<T>},
+		DerivativeBalances:  pallet_balances::<Instance2>::{Pallet, Call, Storage, Config<T>, Event<T>},
+		// TODO make above pallet_transaction_payment<Instance1> and then:
+		// DerivativeTransactionPayment: pallet_transaction_payment<Instance2>,
 	}
 );
 
@@ -302,6 +337,7 @@ pub type SignedExtra = (
 	frame_system::CheckEra<Runtime>,
 	frame_system::CheckNonce<Runtime>,
 	frame_system::CheckWeight<Runtime>,
+	// TODO Not sure how to work this with the two transaction payment pallets
 	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 /// Unchecked extrinsic type as expected by this runtime.
@@ -326,9 +362,9 @@ mod benches {
 	define_benchmarks!(
 		[frame_benchmarking, BaselineBench::<Runtime>]
 		[frame_system, SystemBench::<Runtime>]
-		[pallet_balances, Balances]
 		[pallet_timestamp, Timestamp]
 		[pallet_liquid_staking, LiquidStakingModule]
+		[pallet_balances, MainBalances]
 	);
 }
 
@@ -448,6 +484,9 @@ impl_runtime_apis! {
 		}
 	}
 
+	// This looks to me like a runtime API that allows the host to query balances and fee details for a
+	// proposed transaction. It isn't clear to me if this will work for both main and derivative currencies
+	// but my inclination is to believe that it won't. 
 	impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentApi<Block, Balance> for Runtime {
 		fn query_info(
 			uxt: <Block as BlockT>::Extrinsic,
@@ -462,6 +501,8 @@ impl_runtime_apis! {
 			TransactionPayment::query_fee_details(uxt, len)
 		}
 	}
+
+	// TODO Do we need another Runtime API for payments with the derivative token?
 
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
