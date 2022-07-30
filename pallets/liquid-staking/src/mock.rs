@@ -1,5 +1,5 @@
-use crate as pallet_template;
-use frame_support::traits::{ConstU16, ConstU64};
+use crate as pallet_liquid_staking;
+use frame_support::traits::{ConstU16, ConstU64, GenesisBuild, };
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
@@ -18,15 +18,32 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
+		LiquidStakingModule: pallet_liquid_staking::{Pallet, Call, Storage, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 	}
 );
+
+impl crate::pallet::pallet::Config for Test {
+	type Event = Event;
+}
+
+impl pallet_balances::Config for Test {
+	type MaxLocks = frame_support::traits::ConstU32<1024>;
+	type MaxReserves = ();
+	type ReserveIdentifier = [u8; 8];
+	type Balance = Balance;
+	type Event = Event;
+	type DustRemoval = ();
+	type ExistentialDeposit = ExistentialDeposit;
+	type AccountStore = System;
+	type WeightInfo = ();
+}
 
 impl system::Config for Test {
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = ();
 	type BlockLength = ();
-	type DbWeight = ();
+	type DbWeight = ();	
 	type Origin = Origin;
 	type Call = Call;
 	type Index = u64;
@@ -49,11 +66,17 @@ impl system::Config for Test {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-impl pallet_template::Config for Test {
-	type Event = Event;
-}
-
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+	system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
+	let _ = pallet_balances::GenesisConfig::<Test> {
+		balances: vec![
+			(1, 10),
+			// controller
+			(10, 0),
+			// stashe
+			(11, 0),
+			],
+	}
+	.assimilate_storage(&mut storage);
 }
