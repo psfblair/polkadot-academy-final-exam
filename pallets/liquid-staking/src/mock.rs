@@ -23,8 +23,8 @@ frame_support::construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		LiquidStakingModule: pallet_liquid_staking::{Pallet, Call, Storage, Event<T>},
-		MainBalances: pallet_balances::<Instance1>::{Pallet, Call, Storage, Config<T>, Event<T>},
-		DerivativeBalances: pallet_balances::<Instance2>::{Pallet, Call, Storage, Config<T>, Event<T>},
+		MainBalances: pallet_balances::<Instance1>::{Pallet, Call, Storage, Config<T, Instance1>, Event<T, Instance1>},
+		DerivativeBalances: pallet_balances::<Instance2>::{Pallet, Call, Storage, Config<T, Instance2>, Event<T, Instance2>},
 	}
 );
 
