@@ -97,7 +97,6 @@ impl frame_system::Config for Test {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-// Build genesis storage according to the mock runtime.
 pub fn new_test_ext(users: Vec<(u64, u128, u128)>) -> sp_io::TestExternalities {
 	let mut storage = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	GenesisConfig {

@@ -3,7 +3,15 @@ use frame_support::{
 	traits::{Currency},
 	assert_noop, assert_ok
 };
-		
+
+#[test]
+fn test_genesis_balances() {
+	new_test_ext(initial_balances).execute_with(|| {
+		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&user_account_id), 10, 
+			"origin balance diminished by transfer amount");	
+	}
+}
+
 #[test]
 fn add_stake_transfers_dot() {
 	let (user_account_id, controller_account_id, stash_account_id) = account_ids();
@@ -11,8 +19,8 @@ fn add_stake_transfers_dot() {
 
 	new_test_ext(initial_balances).execute_with(|| {
 		// Account 1 starts with 10 DOT
-		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(1), 3));
-		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&1), 7, 
+		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 3));
+		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&user_account_id), 7, 
 			"origin balance diminished by transfer amount");	
 		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&LiquidStakingModule::stash_account_id()), 3, 
 			"slash account augmented by transfer amount");
