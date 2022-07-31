@@ -40,6 +40,8 @@ pub mod pallet {
        
         #[pallet::constant]
 		type PalletId: Get<PalletId>;
+        #[pallet::constant]
+		type PalletId2: Get<PalletId>;
 	}
 
 	#[pallet::pallet]
@@ -88,15 +90,18 @@ pub mod pallet {
 		pub fn controller_account_id() -> T::AccountId {
 			T::PalletId::get().into_account_truncating()
 		}
-		// TODO: This isn't guaranteed to be distinct if the pallet ID is
-		// greater than the number of bytes which fit into this AccountId type
+		// Into_sub_account_truncating did not result in distinct account IDs for the 
+		// two accounts.
 		pub fn stash_account_id() -> T::AccountId {
-			T::PalletId::get().into_sub_account_truncating(1)
+			T::PalletId2::get().into_account_truncating()
 		}
 	}
 
+	
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		
+		/// TODO Add documentation!!!
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn add_stake(origin: OriginFor<T>, amount: BalanceTypeOf<T>) -> DispatchResult {
 			// Ensure signature

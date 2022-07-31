@@ -29,13 +29,17 @@ frame_support::construct_runtime!(
 );
 
 parameter_types! {
+	// With some more work this would not be needed but into_sub_account_truncating does not result
+	// in distinct account IDs for the two accounts, so something more involved would be needed.
 	pub const LiquidStakingPalletId: PalletId = PalletId(*b"py/lstkg");
+	pub const LiquidStakingPalletId2: PalletId = PalletId(*b"py/lstk2");
 	pub static ExistentialDeposit: BalanceImpl = 0;
 }
 
 impl crate::pallet::Config for Test {
 	type Event = Event;
 	type PalletId = LiquidStakingPalletId;
+	type PalletId2 = LiquidStakingPalletId2;
 	type MainCurrency = MainBalances;
 	type DerivativeCurrency = DerivativeBalances;
 }
