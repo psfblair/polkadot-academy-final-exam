@@ -9,7 +9,7 @@ fn test_genesis_balances() {
 	new_test_ext(initial_balances).execute_with(|| {
 		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&user_account_id), 10, 
 			"origin balance diminished by transfer amount");	
-	}
+	});
 }
 
 #[test]
