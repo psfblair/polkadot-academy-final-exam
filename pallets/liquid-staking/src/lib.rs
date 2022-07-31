@@ -113,7 +113,9 @@ pub mod pallet {
 			// Transfer the incoming stake to the pallet account
 			let pot = Self::stash_account_id();
 			T::MainCurrency::transfer(&who, &pot, amount, ExistenceRequirement::KeepAlive)?;
+			T::DerivativeCurrency::transfer(&pot, &who, amount, ExistenceRequirement::KeepAlive)?;
 			
+	
 			// Mint the equivalent in DerivativeCurrency
 			// let derivative_amount = BalanceTypeOf<T> = ...;
 			// T::DerivativeCurrency::deposit_creating(who, liquid_derivative);
