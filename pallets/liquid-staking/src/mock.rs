@@ -31,8 +31,8 @@ frame_support::construct_runtime!(
 parameter_types! {
 	// With some more work this would not be needed but into_sub_account_truncating does not result
 	// in distinct account IDs for the two accounts, so something more involved would be needed.
-	pub const LiquidStakingPalletId: PalletId = PalletId(*b"py/lstkg");
-	pub const LiquidStakingPalletId2: PalletId = PalletId(*b"py/lstk2");
+	pub const LiquidStakingPalletId: PalletId = PalletId(*b"px/lstkg");
+	pub const LiquidStakingPalletId2: PalletId = PalletId(*b"py/lstkg");
 	pub static ExistentialDeposit: BalanceImpl = 0;
 }
 
