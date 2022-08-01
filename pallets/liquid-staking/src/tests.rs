@@ -144,7 +144,7 @@ fn add_stake_bonds_with_all_free_funds_available() {
 
 		assert_eq!(Staking::active_stake(&stash_account_id()), 35, "pot bonded staked amount is as expected");
 		assert_eq!(<MainBalances as Currency<u64>>::free_balance(&stash_account_id), 0, "stash is entirely locked");
-	}
+	});
 }
 
 // add_stake failure scenarios:

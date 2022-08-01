@@ -159,7 +159,7 @@ pub mod pallet {
 			// implement bonding of free funds in on_initialize, but doing that once every six seconds
 			// seems expensive unless our liquid staking offering is extremely active.
 			let not_yet_bound = T::MainCurrency::free_balance(&pot);
-			T::StakingInterface::bond_extra(Origin::signed(&pot), not_yet_bound) match {
+			match T::StakingInterface::bond_extra(Origin::signed(&pot), not_yet_bound) {
 				Ok(_) -> Self::deposit_event(Event::StakeBonded(&pot, not_yet_bound));
 				// This is an unorthodox use of an event, because we don't want to fail the transaction
 				// if we fail at this point. 
