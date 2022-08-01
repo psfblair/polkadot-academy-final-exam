@@ -81,6 +81,7 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Amount staked is less than minimum account balance
 		InsufficientStake,
+		ExceededMaxStake,
 		// VoteUnauthorized,
 		// VoteQuantityInvalid,
 		// NoSuchValidator,
@@ -89,13 +90,24 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
-		pub fn controller_account_id() -> T::AccountId {
+		fn controller_account_id() -> T::AccountId {
 			T::PalletId::get().into_account_truncating()
 		}
 		// Into_sub_account_truncating did not result in distinct account IDs for the 
 		// two accounts, so without much more involved coding we just use 2 pallet IDs.
-		pub fn stash_account_id() -> T::AccountId {
+		fn stash_account_id() -> T::AccountId {
 			T::PalletId2::get().into_account_truncating()
+		}
+
+		fn quantity_to_mint(
+				amount: BalanceTypeOf<T>, 
+				total_stake: BalanceTypeOf<T>, 
+				derivative_total_issuance: BalanceTypeOf<T>) -> Result<BalanceTypeOf<T>, Error<T>> {
+
+			match derivative_total_issuance.checked_div(total_stake) {
+				None -> Ok(amount), // If we start with nothing staked, we exchange at 1:1
+				Some(quotient) -> quotient.checked_mul(amount).ok_or_else(|| ExceededMaxStake)
+			}
 		}
 	}
 
@@ -118,9 +130,10 @@ pub mod pallet {
 			T::MainCurrency::transfer(&who, &pot, amount, ExistenceRequirement::KeepAlive)?;			
 	
 			// Mint the equivalent in DerivativeCurrency
-			// let derivative_amount = BalanceTypeOf<T> = ...;
-			// TODO MAKE SURE TO USE SAFE MATH!!!! 
-			// T::DerivativeCurrency::deposit_creating(who, liquid_derivative);
+			let total_stake = T::MainCurrency::total_balance(&pot);
+			let derivative_total_issuance = T::DerivativeCurrency::total_issuance();
+			let derivative_quantity_to_mint = Self::quantity_to_mint(amount, total_stake, derivative_total_issuance)?;
+			T::DerivativeCurrency::deposit_creating(who, derivative_quantity_to_mint);
 
 			// We assume 'pot' is registered as a staker at this point
 			// We immediately stake the incoming amount. Later we can worry about the voting

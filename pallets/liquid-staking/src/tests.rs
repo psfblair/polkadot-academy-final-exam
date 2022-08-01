@@ -108,8 +108,6 @@ fn add_stake_mints_sdot_for_later_staker_after_slash() {
 	});	
 }
 
-// Make sure no division errors
-
 // #[test]
 // fn add_stake_nominates_with_stake_added() {
 
@@ -144,6 +142,8 @@ fn add_stake_fails_with_insufficient_stake() {
 		);
 	});
 }
+
+// TODO Test multiplication overflow by sending in max value u128
 
 fn controller_account_id() -> u64 {
 	LiquidStakingModule::controller_account_id()
