@@ -42,6 +42,8 @@ pub mod pallet {
 		type PalletId: Get<PalletId>;
         #[pallet::constant]
 		type PalletId2: Get<PalletId>;
+		#[pallet::constant]
+		type MinimumStake: Get<BalanceTypeOf<Self>>;
 	}
 
 	#[pallet::pallet]
@@ -91,7 +93,7 @@ pub mod pallet {
 			T::PalletId::get().into_account_truncating()
 		}
 		// Into_sub_account_truncating did not result in distinct account IDs for the 
-		// two accounts.
+		// two accounts, so without much more involved coding we just use 2 pallet IDs.
 		pub fn stash_account_id() -> T::AccountId {
 			T::PalletId2::get().into_account_truncating()
 		}
@@ -107,8 +109,8 @@ pub mod pallet {
 			// Ensure signature
 			let who = ensure_signed(origin)?;
 
-			// Ensure stake is more than minimum balance. If we want to require more we would do it here.
-			ensure!(amount > T::MainCurrency::minimum_balance(), Error::<T>::InsufficientStake);
+			// Ensure stake is more than minimum.
+			ensure!(amount > T::MinimumStake::get(), Error::<T>::InsufficientStake);
 
 			// Transfer the incoming stake to the pallet account
 			// TODO Review notes and update this based on what Kian said about genesis etc.

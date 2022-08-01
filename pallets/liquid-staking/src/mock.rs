@@ -31,15 +31,17 @@ frame_support::construct_runtime!(
 parameter_types! {
 	// With some more work this would not be needed but into_sub_account_truncating does not result
 	// in distinct account IDs for the two accounts, so something more involved would be needed.
-	pub const LiquidStakingPalletId: PalletId = PalletId(*b"px/lstkg");
-	pub const LiquidStakingPalletId2: PalletId = PalletId(*b"py/lstkg");
-	pub static ExistentialDeposit: BalanceImpl = 0;
+	pub const PalletIdImpl: PalletId = PalletId(*b"px/lstkg");
+	pub const PalletIdImpl2: PalletId = PalletId(*b"py/lstkg");
+	pub const MinimumStakeImpl: BalanceImpl = 2;
+	pub static ExistentialDepositImpl: BalanceImpl = 0;
 }
 
 impl crate::pallet::Config for Test {
 	type Event = Event;
-	type PalletId = LiquidStakingPalletId;
-	type PalletId2 = LiquidStakingPalletId2;
+	type PalletId = PalletIdImpl;
+	type PalletId2 = PalletIdImpl2;
+	type MinimumStake = MinimumStakeImpl;
 	type MainCurrency = MainBalances;
 	type DerivativeCurrency = DerivativeBalances;
 }
@@ -52,7 +54,7 @@ impl pallet_balances::Config<MainToken> for Test {
 	type Balance = BalanceImpl;
 	type Event = Event;
 	type DustRemoval = ();
-	type ExistentialDeposit = ExistentialDeposit;
+	type ExistentialDeposit = ExistentialDepositImpl;
 	type AccountStore = System;
 	type WeightInfo = ();
 }
@@ -65,7 +67,7 @@ impl pallet_balances::Config<DerivativeToken> for Test {
 	type Balance = BalanceImpl;
 	type Event = Event;
 	type DustRemoval = ();
-	type ExistentialDeposit = ExistentialDeposit;
+	type ExistentialDeposit = ExistentialDepositImpl;
 	type AccountStore = StorageMapShim<pallet_balances::pallet::Account<Test, DerivativeToken>, frame_system::Provider<Test>, Self::AccountId, pallet_balances::AccountData<BalanceImpl>>;
 	type WeightInfo = ();
 }
