@@ -1,4 +1,5 @@
-use crate::{mock::*, Error};
+use crate::{mock::{new_test_ext, LiquidStakingModule, MainBalances, DerivativeBalances, Event as MockEvent
+    , Origin, Test}, Event, Error};
 use frame_support::{
 	traits::{Currency},
 	assert_noop, assert_ok
@@ -125,7 +126,7 @@ fn add_stake_deposits_stake_added_event() {
 	new_test_ext(initial_balances).execute_with(|| {
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 4));
 
-		Pallet::assert_has_event(pallet_balances::pallet::Event::StakeAdded(user_account_id, 4));
+		Pallet::<Test>::assert_has_event(MockEvent::LiquidStakingModule(Event::StakeAdded(user_account_id, 4)));
 	});	
 }
 
