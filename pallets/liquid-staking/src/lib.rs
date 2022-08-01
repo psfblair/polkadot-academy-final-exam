@@ -130,9 +130,9 @@ pub mod pallet {
 			let pot = Self::stash_account_id();
 	        
 			// Mint the equivalent in DerivativeCurrency
-			let total_stake = T::MainCurrency::total_balance(&pot);
+			let total_staked = T::MainCurrency::total_balance(&pot);
 			let derivative_total_issuance = T::DerivativeCurrency::total_issuance();
-			let derivative_quantity_to_mint = Self::quantity_to_mint(amount, total_stake, derivative_total_issuance)?;
+			let derivative_quantity_to_mint = Self::quantity_to_mint(amount, total_staked, derivative_total_issuance)?;
 			
             // Transfer the incoming stake to the pallet account
 			// TODO Review notes and update this based on what Kian said about genesis etc.
