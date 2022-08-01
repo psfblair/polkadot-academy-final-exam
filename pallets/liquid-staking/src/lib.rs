@@ -22,6 +22,7 @@ pub mod pallet {
 	use frame_support::{
             PalletId,
             pallet_prelude::*,
+			dispatch::{Dispatchable},
             traits::{
                 Currency,
                 LockableCurrency,
@@ -122,10 +123,8 @@ pub mod pallet {
 	
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		/// Instead of making a call to the staking pallet each time we get new funds
-		/// we instead bind the stash account's free funds on block initialization
 		fn on_initialize(n: T::BlockNumber) -> Weight {
-
+			0
 		}
 	}
 
