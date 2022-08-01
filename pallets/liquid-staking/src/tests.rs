@@ -143,7 +143,20 @@ fn add_stake_fails_with_insufficient_stake() {
 	});
 }
 
-// TODO Test multiplication overflow by sending in max value u128
+#[test]
+fn add_stake_fails_when_max_stake_exceeded() {
+	let user_account_id = 1;
+	let initial_balances = vec![
+		(user_account_id, u128::MAX - 2u128, 0),
+		(stash_account_id(), 2, 2),
+	];
+	new_test_ext(initial_balances).execute_with(|| {
+		// Try to stake u128::MAX DOT
+		assert_noop!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), u128::MAX),
+			Error::<Test>::ExceededMaxStake
+		);
+	});
+}
 
 fn controller_account_id() -> u64 {
 	LiquidStakingModule::controller_account_id()
