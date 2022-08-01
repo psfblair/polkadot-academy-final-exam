@@ -7,9 +7,11 @@ use frame_support::{
 #[test]
 fn test_genesis_balances() {
 	let (user_account_id, controller_account_id, stash_account_id) = account_ids();
-	let initial_balances = initial_balances(
-		user_account_id, controller_account_id, stash_account_id
-	);
+	let initial_balances = vec![
+		(user_account_id, 10, 70),
+		(controller_account_id, 0, 0),
+		(stash_account_id, 20, 160),
+	];
 
 	new_test_ext(initial_balances).execute_with(|| {
 		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&user_account_id), 10, 
