@@ -50,7 +50,7 @@ fn add_stake_fails_with_insufficient_balance() {
 	new_test_ext(initial_balances).execute_with(|| {
 		// Account 1 starts with 10 DOT
 		assert_noop!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 30),
-			Error::<Test>::InsufficientBalance
+			pallet_balances::pallet::Error::<Test>::InsufficientBalance
 		);
 	});
 }
