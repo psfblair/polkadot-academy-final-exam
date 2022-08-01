@@ -78,7 +78,7 @@ pub mod pallet {
 		
 		/// The staking tokens associated with the redeemed liquid tokens have been unbonded and 
 		/// credited to the staker [account, amount]
-		StakeReleased(&T::AccountId, BalanceTypeOf<T>, BalanceTypeOf<T>),
+		StakeReleased(T::AccountId, BalanceTypeOf<T>, BalanceTypeOf<T>),
 		
 		// ValidatorVoteSubmitted,
 		// ReferendumVoteSubmitted,

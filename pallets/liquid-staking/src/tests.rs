@@ -1,5 +1,5 @@
 use crate::{
-    mock::{new_test_ext, LiquidStakingModule, MainBalances, DerivativeBalances, Origin, Test}, 
+    mock::{new_test_ext, LiquidStakingModule, MainBalances, DerivativeBalances, Origin, Test, StakingMock}, 
     Event, Error,
 };
 use frame_support::{
@@ -137,12 +137,12 @@ fn add_stake_bonds_with_all_free_funds_available() {
 	
 	new_test_ext(initial_balances).execute_with(|| {
 		// Set up a state where 20 of the balance of 30 are already locked and bonded
-		Staking::bond_extra(Origin::signed(stash_account_id), amount);
+		StakingMock::bond_extra(Origin::signed(stash_account_id), amount);
 		<MainBalances as LockableCurrency<u64>>::set_lock(*b"lockid", &stash_account_id, 20, WithdrawReasons::RESERVE);
 
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 5));
 
-		assert_eq!(Staking::active_stake(&stash_account_id()), 35, "pot bonded staked amount is as expected");
+		assert_eq!(StakingMock::active_stake(&stash_account_id()), 35, "pot bonded staked amount is as expected");
 		assert_eq!(<MainBalances as Currency<u64>>::free_balance(&stash_account_id), 0, "stash is entirely locked");
 	});
 }
