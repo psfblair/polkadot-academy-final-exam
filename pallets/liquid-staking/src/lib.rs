@@ -111,10 +111,9 @@ pub mod pallet {
 			ensure!(amount > T::MainCurrency::minimum_balance(), Error::<T>::InsufficientStake);
 
 			// Transfer the incoming stake to the pallet account
+			// TODO Review notes and update this based on what Kian said about genesis etc.
 			let pot = Self::stash_account_id();
-			T::MainCurrency::transfer(&who, &pot, amount, ExistenceRequirement::KeepAlive)?;
-			T::DerivativeCurrency::transfer(&pot, &who, amount, ExistenceRequirement::KeepAlive)?;
-			
+			T::MainCurrency::transfer(&who, &pot, amount, ExistenceRequirement::KeepAlive)?;			
 	
 			// Mint the equivalent in DerivativeCurrency
 			// let derivative_amount = BalanceTypeOf<T> = ...;
