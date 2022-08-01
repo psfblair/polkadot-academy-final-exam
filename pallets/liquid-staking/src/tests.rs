@@ -7,6 +7,7 @@ use frame_support::{
 	assert_noop, assert_ok
 };
 use frame_system::pallet::Pallet;
+use sp_std::collections::btree_map::BTreeMap;
 
 #[test]
 fn test_genesis_balances() {
