@@ -76,11 +76,11 @@ pub mod pallet {
 		// ReferendumVoteSubmitted,
 	}
 
-	// https://docs.substrate.io/v3/runtime/events-and-errors
 	#[pallet::error]
 	pub enum Error<T> {
 		/// Amount staked is less than minimum account balance
 		InsufficientStake,
+		/// Amount staked exceeded maximum amount allowed
 		ExceededMaxStake,
 		// VoteUnauthorized,
 		// VoteQuantityInvalid,
@@ -93,8 +93,8 @@ pub mod pallet {
 		pub fn controller_account_id() -> T::AccountId {
 			T::PalletId::get().into_account_truncating()
 		}
-		// Into_sub_account_truncating did not result in distinct account IDs for the 
-		// two accounts, so without much more involved coding we just use 2 pallet IDs.
+		// Into_sub_account_truncating does not result in distinct account IDs for the two
+		// accounts, so to save much more involved coding we are just using 2 pallet IDs.
 		pub fn stash_account_id() -> T::AccountId {
 			T::PalletId2::get().into_account_truncating()
 		}
@@ -145,25 +145,5 @@ pub mod pallet {
 
 			Ok(())
 		}
-/*
-		/// An example dispatchable that may throw a custom error.
-		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1))]
-		pub fn cause_error(origin: OriginFor<T>) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
-
-			// Read a value from storage.
-			match <Something<T>>::get() {
-				// Return an error if the value has not been set.
-				None => return Err(Error::<T>::NoneValue.into()),
-				Some(old) => {
-					// Increment the value read from storage; will error in the event of overflow.
-					let new = old.checked_add(1).ok_or(Error::<T>::StorageOverflow)?;
-					// Update the value in storage with the incremented result.
-					<Something<T>>::put(new);
-					Ok(())
-				},
-			}
-		}
-*/		
 	}
 }
