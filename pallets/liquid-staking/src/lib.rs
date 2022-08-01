@@ -119,6 +119,7 @@ pub mod pallet {
 	
 			// Mint the equivalent in DerivativeCurrency
 			// let derivative_amount = BalanceTypeOf<T> = ...;
+			// TODO MAKE SURE TO USE SAFE MATH!!!! 
 			// T::DerivativeCurrency::deposit_creating(who, liquid_derivative);
 
 			// We assume 'pot' is registered as a staker at this point
