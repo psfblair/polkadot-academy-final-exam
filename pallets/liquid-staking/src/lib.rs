@@ -31,6 +31,8 @@ pub mod pallet {
     use frame_support::sp_runtime::{
             traits::{AccountIdConversion, CheckedMul, CheckedDiv,}
         };
+	use sp_staking::StakingInterface;
+	
 	use crate::BalanceTypeOf;
 
 	#[pallet::config]
@@ -67,6 +69,9 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		/// An account has staked a certain amount of the staking token with the pallet [account, amount]
 		StakeAdded(T::AccountId, BalanceTypeOf<T>),
+
+		/// The pot account was unable to bond some free funds [account, error]
+		BondingFailed(T::AccountId, DispatchError),
 
 		/// An account has redeemed a certain amount of the liquid token with the pallet [account, amount]
 		DerivativeRedeemed(T::AccountId, BalanceTypeOf<T>),
@@ -159,11 +164,12 @@ pub mod pallet {
 			// implement bonding of free funds in on_initialize, but doing that once every six seconds
 			// seems expensive unless our liquid staking offering is extremely active.
 			let not_yet_bonded = T::MainCurrency::free_balance(&pot);
-			match T::StakingInterface::bond_extra(Origin::signed(&pot), not_yet_bonded) {
-				Ok(_) => Self::deposit_event(Event::StakeBonded(&pot, not_yet_bonded)),
-				// This is an unorthodox use of an event, because we don't want to fail the transaction
-				// if we fail at this point. 
+			T::StakingInterface::bond_extra(Origin::signed(&pot), not_yet_bonded) {
+				// An unorthodox use of an event to signal an error condition. We don't want to fail the transaction
+				// if we fail to bond at this point, but we do want some indication out in the world that bonding failed.
+				// Success will result in a Bonded event from the staking pallet so we don't need an event for that.
 				err @ Err(_) => Self::deposit_event(Event::BondingFailed(&pot, err)),
+				_ => ()
 			}
 
 			Ok(())
