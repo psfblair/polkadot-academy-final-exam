@@ -28,7 +28,9 @@ pub mod pallet {
                 tokens::ExistenceRequirement,
             }
         };
-    use frame_support::sp_runtime::traits::{AccountIdConversion, CheckedMul, CheckedDiv};
+    use frame_support::sp_runtime::{
+            traits::{AccountIdConversion, CheckedMul, CheckedDiv,}
+        };
 	use crate::BalanceTypeOf;
 
 	#[pallet::config]
@@ -100,14 +102,15 @@ pub mod pallet {
 		}
 
 		fn quantity_to_mint(
-				amount: BalanceTypeOf<T>, 
-				total_stake: BalanceTypeOf<T>, 
+				amount_staked: BalanceTypeOf<T>, 
+				total_stake_stash: BalanceTypeOf<T>, 
 				derivative_total_issuance: BalanceTypeOf<T>) -> Result<BalanceTypeOf<T>, Error<T>> {
 
-			match derivative_total_issuance.checked_div(&total_stake) {
-				None => Ok(amount), // If we start with nothing staked, we exchange at 1:1
-				Some(quotient) => quotient.checked_mul(&amount).ok_or_else(|| crate::Error::ExceededMaxStake)
-			}
+            let product = derivative_total_issuance.checked_mul(&amount_staked).ok_or_else(|| crate::Error::ExceededMaxStake)?;
+            match product.checked_div(&total_stake_stash) {
+                None => Ok(amount_staked), // If we start with nothing staked, we exchange at 1:1
+                Some(quotient) => Ok(quotient)
+            }
 		}
 	}
 
@@ -124,16 +127,16 @@ pub mod pallet {
 			// Ensure stake is more than minimum.
 			ensure!(amount > T::MinimumStake::get(), Error::<T>::InsufficientStake);
 
-			// Transfer the incoming stake to the pallet account
-			// TODO Review notes and update this based on what Kian said about genesis etc.
 			let pot = Self::stash_account_id();
-			T::MainCurrency::transfer(&who, &pot, amount, ExistenceRequirement::KeepAlive)?;			
-	
+	        
 			// Mint the equivalent in DerivativeCurrency
 			let total_stake = T::MainCurrency::total_balance(&pot);
 			let derivative_total_issuance = T::DerivativeCurrency::total_issuance();
 			let derivative_quantity_to_mint = Self::quantity_to_mint(amount, total_stake, derivative_total_issuance)?;
-            // TODO Pot has to have the authority to dispatch this call?
+			
+            // Transfer the incoming stake to the pallet account
+			// TODO Review notes and update this based on what Kian said about genesis etc.
+			T::MainCurrency::transfer(&who, &pot, amount, ExistenceRequirement::KeepAlive)?;			
 			T::DerivativeCurrency::deposit_creating(&who, derivative_quantity_to_mint);
 
 			// We assume 'pot' is registered as a staker at this point
