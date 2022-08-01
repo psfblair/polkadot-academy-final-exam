@@ -160,10 +160,10 @@ pub mod pallet {
 			// seems expensive unless our liquid staking offering is extremely active.
 			let not_yet_bound = T::MainCurrency::free_balance(&pot);
 			match T::StakingInterface::bond_extra(Origin::signed(&pot), not_yet_bound) {
-				Ok(_) -> Self::deposit_event(Event::StakeBonded(&pot, not_yet_bound));
+				Ok(_) => Self::deposit_event(Event::StakeBonded(&pot, not_yet_bound));
 				// This is an unorthodox use of an event, because we don't want to fail the transaction
 				// if we fail at this point. 
-				err @ Err(_) -> Self::deposit_event(Event::BondingFailed(&pot, err));
+				err @ Err(_) => Self::deposit_event(Event::BondingFailed(&pot, err));
 			}
 
 			Ok(())
