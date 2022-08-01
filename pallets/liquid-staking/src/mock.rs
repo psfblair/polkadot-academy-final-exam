@@ -1,6 +1,6 @@
 use crate as pallet_liquid_staking;
 use frame_support::{
-	traits::{ConstU16, ConstU64, },
+	traits::{ConstU16, ConstU64, StorageMapShim,},
 	PalletId, parameter_types,
 };
 use sp_core::H256;
@@ -66,7 +66,7 @@ impl pallet_balances::Config<DerivativeToken> for Test {
 	type Event = Event;
 	type DustRemoval = ();
 	type ExistentialDeposit = ExistentialDeposit;
-	type AccountStore = StorageMapShim<Self::Account<Test>, frame_system::Provider<Test>, AccountId, Self::AccountData<BalanceImpl>>;
+	type AccountStore = StorageMapShim<pallet_balances::pallet::Account<Test, DerivativeToken>, frame_system::Provider<Test>, Self::AccountId, pallet_balances::AccountData<BalanceImpl>>;
 	type WeightInfo = ();
 }
 
