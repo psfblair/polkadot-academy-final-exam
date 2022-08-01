@@ -28,7 +28,7 @@ pub mod pallet {
                 tokens::ExistenceRequirement,
             }
         };
-    use frame_support::sp_runtime::traits::AccountIdConversion;
+    use frame_support::sp_runtime::traits::{AccountIdConversion, CheckedMul, CheckedDiv};
 	use crate::BalanceTypeOf;
 
 	#[pallet::config]
@@ -90,12 +90,12 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
-		fn controller_account_id() -> T::AccountId {
+		pub fn controller_account_id() -> T::AccountId {
 			T::PalletId::get().into_account_truncating()
 		}
 		// Into_sub_account_truncating did not result in distinct account IDs for the 
 		// two accounts, so without much more involved coding we just use 2 pallet IDs.
-		fn stash_account_id() -> T::AccountId {
+		pub fn stash_account_id() -> T::AccountId {
 			T::PalletId2::get().into_account_truncating()
 		}
 
@@ -104,9 +104,9 @@ pub mod pallet {
 				total_stake: BalanceTypeOf<T>, 
 				derivative_total_issuance: BalanceTypeOf<T>) -> Result<BalanceTypeOf<T>, Error<T>> {
 
-			match derivative_total_issuance.checked_div(total_stake) {
-				None -> Ok(amount), // If we start with nothing staked, we exchange at 1:1
-				Some(quotient) -> quotient.checked_mul(amount).ok_or_else(|| ExceededMaxStake)
+			match derivative_total_issuance.checked_div(&total_stake) {
+				None => Ok(amount), // If we start with nothing staked, we exchange at 1:1
+				Some(quotient) => quotient.checked_mul(&amount).ok_or_else(|| crate::Error::ExceededMaxStake)
 			}
 		}
 	}
@@ -133,7 +133,8 @@ pub mod pallet {
 			let total_stake = T::MainCurrency::total_balance(&pot);
 			let derivative_total_issuance = T::DerivativeCurrency::total_issuance();
 			let derivative_quantity_to_mint = Self::quantity_to_mint(amount, total_stake, derivative_total_issuance)?;
-			T::DerivativeCurrency::deposit_creating(who, derivative_quantity_to_mint);
+            // TODO Pot has to have the authority to dispatch this call?
+			T::DerivativeCurrency::deposit_creating(&who, derivative_quantity_to_mint);
 
 			// We assume 'pot' is registered as a staker at this point
 			// We immediately stake the incoming amount. Later we can worry about the voting
