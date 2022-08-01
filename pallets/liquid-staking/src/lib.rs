@@ -64,15 +64,15 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// An account has staked a certain amount of the staking token with the pallet [amount, account]
-		StakeAdded(BalanceTypeOf<T>, T::AccountId),
+		/// An account has staked a certain amount of the staking token with the pallet [account, amount]
+		StakeAdded(T::AccountId, BalanceTypeOf<T>),
 
-		/// An account has redeemed a certain amount of the liquid token with the pallet [amount, account]
-		DerivativeRedeemed(BalanceTypeOf<T>, T::AccountId),
+		/// An account has redeemed a certain amount of the liquid token with the pallet [account, amount]
+		DerivativeRedeemed(T::AccountId, BalanceTypeOf<T>),
 		
 		/// The staking tokens associated with the redeemed liquid tokens have been unbonded and 
-		/// credited to the staker [amount, account]
-		StakeReleased(BalanceTypeOf<T>, BalanceTypeOf<T>, T::AccountId),
+		/// credited to the staker [account, amount]
+		StakeReleased(T::AccountId, BalanceTypeOf<T>, BalanceTypeOf<T>),
 		
 		// ValidatorVoteSubmitted,
 		// ReferendumVoteSubmitted,
@@ -113,7 +113,6 @@ pub mod pallet {
             }
 		}
 	}
-
 	
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -144,7 +143,7 @@ pub mod pallet {
 			// staking::bond_extra(pot). 
 
 			// Emit an event.
-			Self::deposit_event(Event::StakeAdded(amount, who));
+			Self::deposit_event(Event::StakeAdded(who, amount));
 
 			Ok(())
 		}

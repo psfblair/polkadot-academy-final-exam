@@ -3,6 +3,7 @@ use frame_support::{
 	traits::{Currency},
 	assert_noop, assert_ok
 };
+use frame_system::pallet::Pallet;
 
 #[test]
 fn test_genesis_balances() {
@@ -112,6 +113,21 @@ fn add_stake_mints_sdot_for_later_staker_after_slash() {
 // fn add_stake_nominates_with_stake_added() {
 
 // }
+
+#[test]
+fn add_stake_deposits_stake_added_event() {
+	let user_account_id = 1;
+	let initial_balances = vec![
+		(user_account_id, 10, 0),
+		(stash_account_id(), 0, 0),
+	];
+	
+	new_test_ext(initial_balances).execute_with(|| {
+		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 4));
+
+		Pallet::assert_has_event(pallet_balances::pallet::Event::StakeAdded(user_account_id, 4));
+	});	
+}
 
 // add_stake failure scenarios:
 
