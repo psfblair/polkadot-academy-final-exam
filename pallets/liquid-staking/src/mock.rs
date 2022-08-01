@@ -66,7 +66,7 @@ impl pallet_balances::Config<DerivativeToken> for Test {
 	type Event = Event;
 	type DustRemoval = ();
 	type ExistentialDeposit = ExistentialDeposit;
-	type AccountStore = System;
+	type AccountStore = StorageMapShim<Self::Account<Test>, frame_system::Provider<Test>, AccountId, Self::AccountData<BalanceImpl>>;
 	type WeightInfo = ();
 }
 

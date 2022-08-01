@@ -30,14 +30,27 @@ fn add_stake_transfers_dot() {
                  <MainBalances as Currency<u64>>::total_balance(&LiquidStakingModule::stash_account_id()),
                  <DerivativeBalances as Currency<u64>>::total_balance(&LiquidStakingModule::stash_account_id()));
 
-		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&LiquidStakingModule::stash_account_id()), 7, 
-			"origin balance diminished by main currency transfer amount");	
-		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&LiquidStakingModule::stash_account_id()), 23, 
-			"slash account augmented by main currency transfer amount");
-		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&LiquidStakingModule::controller_account_id()), 0, 
+			assert_eq!(<MainBalances as Currency<u64>>::total_balance(&user_account_id), 7, 
+				 "origin balance diminished by transfer amount");	
+			assert_eq!(<MainBalances as Currency<u64>>::total_balance(&LiquidStakingModule::stash_account_id()), 3, 
+				 "slash account augmented by transfer amount");
+			 assert_eq!(<MainBalances as Currency<u64>>::total_balance(&LiquidStakingModule::controller_account_id()), 0, 
 			"staking does not affect controller account balance");
 	});
 }
+
+// #[test]
+// fn add_stake_fails_with_insufficient_balance() {
+// 	let (user_account_id, controller_account_id, stash_account_id) = account_ids();
+// 	let initial_balances = initial_balances(user_account_id, controller_account_id, stash_account_id);
+
+// 	new_test_ext(initial_balances).execute_with(|| {
+// 		// Account 1 starts with 10 DOT
+// 		assert_noop!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 30),
+// 			Error::<Test>::InsufficientBalance
+// 		);
+// 	});
+// }
 
 
 /* Test errors
