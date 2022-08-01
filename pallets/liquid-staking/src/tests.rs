@@ -21,7 +21,7 @@ fn test_genesis_balances() {
 fn add_stake_transfers_dot() {
 	let (user_account_id, controller_account_id, stash_account_id) = account_ids();
 	let initial_balances = vec![
-		(user1_account_id, 10, 70),
+		(user_account_id, 10, 70),
 		(controller_account_id, 0, 0),
 		(stash_account_id, 20, 160),
 	]
