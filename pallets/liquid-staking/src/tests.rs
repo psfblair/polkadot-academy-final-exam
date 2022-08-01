@@ -3,7 +3,7 @@ use crate::{
     Event, Error,
 };
 use frame_support::{
-	traits::{Currency},
+	traits::{Currency, LockableCurrency, WithdrawReasons},
 	assert_noop, assert_ok
 };
 use frame_system::pallet::Pallet;
@@ -112,11 +112,6 @@ fn add_stake_mints_sdot_for_later_staker_after_slash() {
 	});	
 }
 
-// #[test]
-// fn add_stake_nominates_with_stake_added() {
-
-// }
-
 #[test]
 fn add_stake_deposits_stake_added_event() {
 	let user_account_id = 1;
@@ -130,6 +125,26 @@ fn add_stake_deposits_stake_added_event() {
 
 		Pallet::<Test>::assert_has_event(Event::StakeAdded(user_account_id, 4).into());
 	});	
+}
+
+#[test]
+fn add_stake_bonds_with_all_free_funds_available() {
+	let stash_account_id = stash_account_id();
+	let initial_balances = vec![
+		(user_account_id, 10, 0),
+		(stash_account_id, 30, 0),
+	];
+	
+	new_test_ext(initial_balances).execute_with(|| {
+		// Set up a state where 20 of the balance of 30 are already locked and bonded
+		Staking::bond_extra(Origin::signed(stash_account_id), amount);
+		<MainBalances as LockableCurrency<u64>>::set_lock(*b"lockid", &stash_account_id, 20, WithdrawReasons::RESERVE);
+
+		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 5));
+
+		assert_eq!(Staking::active_stake(&stash_account_id()), 35, "pot bonded staked amount is as expected");
+		assert_eq!(<MainBalances as Currency<u64>>::free_balance(&stash_account_id), 0, "stash is entirely locked");
+	}
 }
 
 // add_stake failure scenarios:

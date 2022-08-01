@@ -25,6 +25,8 @@ frame_support::construct_runtime!(
 		LiquidStakingModule: pallet_liquid_staking::{Pallet, Call, Storage, Event<T>},
 		MainBalances: pallet_balances::<Instance1>::{Pallet, Call, Storage, Config<T, Instance1>, Event<T, Instance1>},
 		DerivativeBalances: pallet_balances::<Instance2>::{Pallet, Call, Storage, Config<T, Instance2>, Event<T, Instance2>},
+		
+		Staking: StakingMock,
 	}
 );
 
@@ -44,6 +46,7 @@ impl crate::pallet::Config for Test {
 	type MinimumStake = MinimumStakeImpl;
 	type MainCurrency = MainBalances;
 	type DerivativeCurrency = DerivativeBalances;
+	type StakingInterface = Staking;
 }
 
 type MainToken = pallet_balances::Instance1;
@@ -70,6 +73,107 @@ impl pallet_balances::Config<DerivativeToken> for Test {
 	type ExistentialDeposit = ExistentialDepositImpl;
 	type AccountStore = StorageMapShim<pallet_balances::pallet::Account<Test, DerivativeToken>, frame_system::Provider<Test>, Self::AccountId, pallet_balances::AccountData<BalanceImpl>>;
 	type WeightInfo = ();
+}
+
+// StakingMock below is taken from the nomination-pools pallet
+parameter_types! {
+	pub static CurrentEra: EraIndex = 0;
+	pub static BondingDuration: EraIndex = 3;
+	pub storage BondedBalanceMap: BTreeMap<AccountId, Balance> = Default::default();
+	pub storage UnbondingBalanceMap: BTreeMap<AccountId, Balance> = Default::default();
+	#[derive(Clone, PartialEq)]
+	pub static MaxUnbonding: u32 = 8;
+	pub storage Nominations: Option<Vec<AccountId>> = None;
+}
+
+pub struct StakingMock;
+impl StakingMock {
+	pub(crate) fn set_bonded_balance(who: AccountId, bonded: Balance) {
+		let mut x = BondedBalanceMap::get();
+		x.insert(who, bonded);
+		BondedBalanceMap::set(&x)
+	}
+}
+
+impl sp_staking::StakingInterface for StakingMock {
+	type Balance = BalanceImpl;
+	type AccountId = Self::AccountId;
+
+	fn minimum_bond() -> Self::Balance {
+		10
+	}
+
+	fn current_era() -> EraIndex {
+		CurrentEra::get()
+	}
+
+	fn bonding_duration() -> EraIndex {
+		BondingDuration::get()
+	}
+
+	fn active_stake(who: &Self::AccountId) -> Option<Self::Balance> {
+		BondedBalanceMap::get().get(who).map(|v| *v)
+	}
+
+	fn total_stake(who: &Self::AccountId) -> Option<Self::Balance> {
+		match (
+			UnbondingBalanceMap::get().get(who).map(|v| *v),
+			BondedBalanceMap::get().get(who).map(|v| *v),
+		) {
+			(None, None) => None,
+			(Some(v), None) | (None, Some(v)) => Some(v),
+			(Some(a), Some(b)) => Some(a + b),
+		}
+	}
+
+	fn bond_extra(who: Self::AccountId, extra: Self::Balance) -> DispatchResult {
+		let mut x = BondedBalanceMap::get();
+		x.get_mut(&who).map(|v| *v += extra);
+		BondedBalanceMap::set(&x);
+		Ok(())
+	}
+
+	fn unbond(who: Self::AccountId, amount: Self::Balance) -> DispatchResult {
+		let mut x = BondedBalanceMap::get();
+		*x.get_mut(&who).unwrap() = x.get_mut(&who).unwrap().saturating_sub(amount);
+		BondedBalanceMap::set(&x);
+		let mut y = UnbondingBalanceMap::get();
+		*y.entry(who).or_insert(Self::Balance::zero()) += amount;
+		UnbondingBalanceMap::set(&y);
+		Ok(())
+	}
+
+	fn chill(_: Self::AccountId) -> sp_runtime::DispatchResult {
+		Ok(())
+	}
+
+	fn withdraw_unbonded(who: Self::AccountId, _: u32) -> Result<bool, DispatchError> {
+		// Simulates removing unlocking chunks and only having the bonded balance locked
+		let mut x = UnbondingBalanceMap::get();
+		x.remove(&who);
+		UnbondingBalanceMap::set(&x);
+
+		Ok(UnbondingBalanceMap::get().is_empty() && BondedBalanceMap::get().is_empty())
+	}
+
+	fn bond(
+		stash: Self::AccountId,
+		_: Self::AccountId,
+		value: Self::Balance,
+		_: Self::AccountId,
+	) -> DispatchResult {
+		StakingMock::set_bonded_balance(stash, value);
+		Ok(())
+	}
+
+	fn nominate(_: Self::AccountId, nominations: Vec<Self::AccountId>) -> DispatchResult {
+		Nominations::set(&Some(nominations));
+		Ok(())
+	}
+
+	fn nominations(_: Self::AccountId) -> Option<Vec<Self::AccountId>> {
+		Nominations::get()
+	}
 }
 
 impl frame_system::Config for Test {

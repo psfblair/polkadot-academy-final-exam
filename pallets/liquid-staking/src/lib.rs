@@ -39,6 +39,7 @@ pub mod pallet {
 
 		type MainCurrency: LockableCurrency<Self::AccountId>;
 		type DerivativeCurrency: LockableCurrency<Self::AccountId, Balance = BalanceTypeOf<Self>>;
+		type StakingInterface: sp_staking::StakingInterface;
        
         #[pallet::constant]
 		type PalletId: Get<PalletId>;
@@ -114,6 +115,15 @@ pub mod pallet {
 		}
 	}
 	
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		/// Instead of making a call to the staking pallet each time we get new funds
+		/// we instead bind the stash account's free funds on block initialization
+		fn on_initialize(n: T::BlockNumber) -> Weight {
+
+		}
+	}
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		
@@ -138,12 +148,23 @@ pub mod pallet {
 			T::MainCurrency::transfer(&who, &pot, amount, ExistenceRequirement::KeepAlive)?;			
 			T::DerivativeCurrency::deposit_creating(&who, derivative_quantity_to_mint);
 
-			// We assume 'pot' is registered as a staker at this point
-			// We immediately stake the incoming amount. Later we can worry about the voting
-			// staking::bond_extra(pot). 
-
 			// Emit an event.
-			Self::deposit_event(Event::StakeAdded(who, amount));
+			Self::deposit_event(Event::StakeAdded(&who, amount));
+
+			// We assume 'pot' is registered as a staker at this point. We will bond all free funds 
+			// in the stash account instead of bonding only the funds that just came in, in case we 
+			// received a deposit in a prior transaction that was not able to be bonded. Also, we
+			// won't fail this transaction if the funds came in but bonding fails; we will bond those
+			// funds the next time new funds come in. Or if we need to be more vigorous, then we could
+			// implement bonding of free funds in on_initialize, but doing that once every six seconds
+			// seems expensive unless our liquid staking offering is extremely active.
+			let not_yet_bound = T::MainCurrency::free_balance(&pot);
+			T::StakingInterface::bond_extra(Origin::signed(&pot), not_yet_bound) match {
+				Ok(_) -> Self::deposit_event(Event::StakeBonded(&pot, not_yet_bound));
+				// This is an unorthodox use of an event, because we don't want to fail the transaction
+				// if we fail at this point. 
+				err @ Err(_) -> Self::deposit_event(Event::BondingFailed(&pot, err));
+			}
 
 			Ok(())
 		}
