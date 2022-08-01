@@ -26,8 +26,6 @@ frame_support::construct_runtime!(
 		LiquidStakingModule: pallet_liquid_staking::{Pallet, Call, Storage, Event<T>},
 		MainBalances: pallet_balances::<Instance1>::{Pallet, Call, Storage, Config<T, Instance1>, Event<T, Instance1>},
 		DerivativeBalances: pallet_balances::<Instance2>::{Pallet, Call, Storage, Config<T, Instance2>, Event<T, Instance2>},
-		
-		Staking: StakingMock,
 	}
 );
 
@@ -47,7 +45,7 @@ impl crate::pallet::Config for Test {
 	type MinimumStake = MinimumStakeImpl;
 	type MainCurrency = MainBalances;
 	type DerivativeCurrency = DerivativeBalances;
-	type StakingInterface = Staking;
+	type StakingInterface = StakingMock;
 }
 
 type MainToken = pallet_balances::Instance1;
