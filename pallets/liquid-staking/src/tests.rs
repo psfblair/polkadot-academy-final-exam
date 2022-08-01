@@ -24,7 +24,7 @@ fn add_stake_transfers_dot() {
 		(user_account_id, 10, 70),
 		(controller_account_id, 0, 0),
 		(stash_account_id, 20, 160),
-	]
+	];
 
 	new_test_ext(initial_balances).execute_with(|| {
 		// Account 1 starts with 10 DOT and 
