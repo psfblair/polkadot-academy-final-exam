@@ -18,11 +18,10 @@ pub type BalanceTypeOf<T> = <<T as Config>::MainCurrency as Currency<AccountIdOf
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_system::pallet_prelude::*;
+	use frame_system::{Origin, pallet_prelude::*};
 	use frame_support::{
             PalletId,
             pallet_prelude::*,
-			dispatch::{Dispatchable},
             traits::{
                 Currency,
                 LockableCurrency,
@@ -79,7 +78,7 @@ pub mod pallet {
 		
 		/// The staking tokens associated with the redeemed liquid tokens have been unbonded and 
 		/// credited to the staker [account, amount]
-		StakeReleased(T::AccountId, BalanceTypeOf<T>, BalanceTypeOf<T>),
+		StakeReleased(&T::AccountId, BalanceTypeOf<T>, BalanceTypeOf<T>),
 		
 		// ValidatorVoteSubmitted,
 		// ReferendumVoteSubmitted,
@@ -153,7 +152,7 @@ pub mod pallet {
 			T::DerivativeCurrency::deposit_creating(&who, derivative_quantity_to_mint);
 
 			// Emit an event.
-			Self::deposit_event(Event::StakeAdded(&who, amount));
+			Self::deposit_event(Event::StakeAdded(who, amount));
 
 			// We assume 'pot' is registered as a staker at this point. We will bond all free funds 
 			// in the stash account instead of bonding only the funds that just came in, in case we 
@@ -167,7 +166,7 @@ pub mod pallet {
 				// An unorthodox use of an event to signal an error condition. We don't want to fail the transaction
 				// if we fail to bond at this point, but we do want some indication out in the world that bonding failed.
 				// Success will result in a Bonded event from the staking pallet so we don't need an event for that.
-				err @ Err(_) => Self::deposit_event(Event::BondingFailed(&pot, err)),
+				err @ Err(_) => Self::deposit_event(Event::BondingFailed(pot, err)),
 				_ => ()
 			}
 
