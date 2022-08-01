@@ -158,12 +158,12 @@ pub mod pallet {
 			// funds the next time new funds come in. Or if we need to be more vigorous, then we could
 			// implement bonding of free funds in on_initialize, but doing that once every six seconds
 			// seems expensive unless our liquid staking offering is extremely active.
-			let not_yet_bound = T::MainCurrency::free_balance(&pot);
-			match T::StakingInterface::bond_extra(Origin::signed(&pot), not_yet_bound) {
-				Ok(_) => Self::deposit_event(Event::StakeBonded(&pot, not_yet_bound));
+			let not_yet_bonded = T::MainCurrency::free_balance(&pot);
+			match T::StakingInterface::bond_extra(Origin::signed(&pot), not_yet_bonded) {
+				Ok(_) => Self::deposit_event(Event::StakeBonded(&pot, not_yet_bonded)),
 				// This is an unorthodox use of an event, because we don't want to fail the transaction
 				// if we fail at this point. 
-				err @ Err(_) => Self::deposit_event(Event::BondingFailed(&pot, err));
+				err @ Err(_) => Self::deposit_event(Event::BondingFailed(&pot, err)),
 			}
 
 			Ok(())
