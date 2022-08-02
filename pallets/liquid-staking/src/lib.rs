@@ -131,7 +131,7 @@ pub mod pallet {
 			// nominations returns an option with the nominations of a stash, if they are a nominator, None otherwise.
 			let _ = T::StakingInterface::nominations(stash_account_id).unwrap_or_else(|| 
 				// At least the minimum bond amount must be present in the stash account for this pallet to work.
-				if T::MainCurrency::free_balance(&stash_account_id); T::StakingInterface::minimum_bond() {
+				if T::MainCurrency::free_balance(&stash_account_id) > T::StakingInterface::minimum_bond() {
 					T::StakingInterface::bond(
 						stash_account_id,
 						Self::controller_account_id(),
