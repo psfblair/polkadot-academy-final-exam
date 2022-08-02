@@ -16,7 +16,9 @@ fn test_genesis_balances() {
 		(user_account_id, 10, 70),
 	];
 
+	// Arrange and Act -- set up genesis
 	new_test_ext(initial_balances).execute_with(|| {
+		// Assert: Balances don't overwrite each other
 		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&user_account_id), 10, 
 			"genesis main balance was not as expected");	
 		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&user_account_id), 10, 
@@ -33,10 +35,12 @@ fn add_stake_transfers_dot() {
 		(controller_account_id(), 0, 0),
 	];
 
+	// Arrange: Account 1 starts with 10 DOT
 	new_test_ext(initial_balances).execute_with(|| {
-		// Account 1 starts with 10 DOT and stakes 3 
+		// Act: Account 1 stakes 3 
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 3));
 
+		// Assert: Money gets transferred to stash account
 		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&user_account_id), 7, 
 				"origin balance diminished by staked amount");	
 		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&stash_account_id()), 23, 
@@ -55,10 +59,12 @@ fn add_stake_mints_sdot_for_first_staker() {
 		(controller_account_id(), 0, 0),
 	];
 
+	// Arrange: Account 1 starts with 10 DOT
 	new_test_ext(initial_balances).execute_with(|| {
-		// Account 1 starts with 10 DOT and stakes 3, gets back 3 sDOT
+		// Act: Account 1 stakes 3
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 3));
 
+		// Assert: Account 1 gets back 3 sDOT
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_balance(&user_account_id), 3, 
 				"origin sDOT balance increased by staked amount at inception");	
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_issuance(), 3, 
@@ -73,18 +79,19 @@ fn add_stake_mints_sdot_for_first_staker() {
 
 #[test]
 fn add_stake_mints_sdot_for_later_staker_after_rewards() {
-	let user_account_id = 1;
-	// Account 1 starts with 7 DOT and 3 sDOT; stash account now has 6 DOT
+	let user_account_id = 1;	
 	let initial_balances = vec![
 		(user_account_id, 7, 3),
 		(stash_account_id(), 6, 0),
 		(controller_account_id(), 0, 0),
 	];
 	
+	// Arrange: Account 1 starts with 7 DOT and 3 sDOT; stash account has 6 DOT
 	new_test_ext(initial_balances).execute_with(|| {
-		// Account 1 stakes 4 DOT, gets back 2 sDOT
+		// Act: Account 1 stakes 4 DOT
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 4));
 
+		// Assert: Account 1 gets back 2 sDOT
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_balance(&user_account_id), 5, 
 				"origin sDOT balance increased correctly");	
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_issuance(), 5, 
@@ -95,17 +102,18 @@ fn add_stake_mints_sdot_for_later_staker_after_rewards() {
 #[test]
 fn add_stake_mints_sdot_for_later_staker_after_slash() {
 	let user_account_id = 1;
-	// Account 1 starts with 7 DOT and 3 sDOT; stash account now has 2 DOT
 	let initial_balances = vec![
 		(user_account_id, 7, 3),
 		(stash_account_id(), 2, 0),
 		(controller_account_id(), 0, 0),
 	];
 	
+	// Arrange: Account 1 starts with 7 DOT and 3 sDOT; stash account has 2 DOT
 	new_test_ext(initial_balances).execute_with(|| {
-		// Account 1 stakes 4 DOT, gets back 6 sDOT
+		// Act: Account 1 stakes 4 DOT
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 4));
 
+		// Assert: Account 1 gets back 6 sDOT
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_balance(&user_account_id), 9, 
 				"origin sDOT balance increased correctly");	
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_issuance(), 9, 
@@ -120,10 +128,12 @@ fn add_stake_deposits_stake_added_event() {
 		(user_account_id, 10, 0),
 		(stash_account_id(), 0, 0),
 	];
-	
+	// Arrange: Whatever account balances
 	new_test_ext(initial_balances).execute_with(|| {
+		// Act: Account 1 stakes 4 DOT
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 4));
 
+		// Assert: Event is deposited
 		Pallet::<Test>::assert_has_event(Event::StakeAdded(user_account_id, 4).into());
 	});	
 }
@@ -137,14 +147,17 @@ fn add_stake_bonds_with_all_free_funds_available() {
 		(stash_account_id, 30, 0),
 	];
 	
+	// Arrange: Stash account has 30 DOT
 	new_test_ext(initial_balances).execute_with(|| {
-		// Set up a state where 20 of the balance of 30 are already locked and bonded
+		// Arrange: Set up a state where 20 of the balance of 30 are already locked and bonded
 		let bonded_amount = 20;
-		StakingMock::bond_extra(stash_account_id, bonded_amount);
+		assert_ok!(StakingMock::bond_extra(stash_account_id, bonded_amount));
 		<MainBalances as LockableCurrency<u64>>::set_lock(*b"stlockid", &stash_account_id, bonded_amount, WithdrawReasons::RESERVE);
 
+		// Act: Add stake
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 5));
 
+		// Assert: Bonded amount is increased (and locked, but the mock doesn't do the locking)
 		assert_eq!(StakingMock::active_stake(&stash_account_id), Some(35), "pot bonded staked amount is as expected");
 		assert_eq!(<MainBalances as Currency<u64>>::free_balance(&stash_account_id), 0, "stash is entirely locked");
 	});
@@ -158,8 +171,10 @@ fn add_stake_fails_with_insufficient_balance() {
 	let initial_balances = vec![
 		(user_account_id, 0, 0),
 	];
+
+	// Arrange: Account 1 starts with 10 DOT
 	new_test_ext(initial_balances).execute_with(|| {
-		// Account 1 starts with 10 DOT; we try to stake 30
+		// Act and Assert: Account 1 tries to stake 30 and gets InsufficientBalance
 		assert_noop!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 30),
 			pallet_balances::pallet::Error::<Test, pallet_balances::Instance1>::InsufficientBalance
 		);
@@ -172,8 +187,10 @@ fn add_stake_fails_with_insufficient_stake() {
 	let initial_balances = vec![
 		(user_account_id, 10, 70),
 	];
+
+	// Arrange: Account 1 starts with 10 DOT
 	new_test_ext(initial_balances).execute_with(|| {
-		// Try to stake 1 DOT
+		// Act and Assert: Account 1 tries to stake 1 and gets InsufficientStake
 		assert_noop!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 1),
 			Error::<Test>::InsufficientStake
 		);
@@ -182,14 +199,17 @@ fn add_stake_fails_with_insufficient_stake() {
 
 #[test]
 fn add_stake_fails_when_max_stake_exceeded() {
+	let big_amount = u128::MAX - 2u128;
 	let user_account_id = 1;
 	let initial_balances = vec![
-		(user_account_id, u128::MAX - 2u128, 0),
+		(user_account_id, big_amount, 0),
 		(stash_account_id(), 2, 2),
 	];
+
+	// Arrange: Account 1 starts with u128::MAX - 2 DOT (have to leave room for total issuance not to overflow)
 	new_test_ext(initial_balances).execute_with(|| {
-		// Try to stake u128::MAX DOT
-		assert_noop!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), u128::MAX),
+		// Act and Assert: Account 1 tries to stake the entire amount and gets ExceededMaxStake
+		assert_noop!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), big_amount),
 			Error::<Test>::ExceededMaxStake
 		);
 	});
