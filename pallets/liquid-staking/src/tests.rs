@@ -140,12 +140,12 @@ fn add_stake_bonds_with_all_free_funds_available() {
 	new_test_ext(initial_balances).execute_with(|| {
 		// Set up a state where 20 of the balance of 30 are already locked and bonded
 		let bonded_amount = 20;
-		StakingMock::bond_extra(Origin::signed(stash_account_id), bonded_amount);
-		<MainBalances as LockableCurrency<u64>>::set_lock(*b"lockid", &stash_account_id, bonded_amount, WithdrawReasons::RESERVE);
+		StakingMock::bond_extra(stash_account_id, bonded_amount);
+		<MainBalances as LockableCurrency<u64>>::set_lock(*b"stlockid", &stash_account_id, bonded_amount, WithdrawReasons::RESERVE);
 
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 5));
 
-		assert_eq!(StakingMock::active_stake(&stash_account_id()), 35, "pot bonded staked amount is as expected");
+		assert_eq!(StakingMock::active_stake(&stash_account_id()), Some(35), "pot bonded staked amount is as expected");
 		assert_eq!(<MainBalances as Currency<u64>>::free_balance(&stash_account_id), 0, "stash is entirely locked");
 	});
 }
