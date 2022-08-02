@@ -33,7 +33,7 @@ pub mod pallet {
         };
 	use sp_staking::StakingInterface;
 	
-	use crate::BalanceTypeOf;
+	use crate::{AccountIdOf, BalanceTypeOf};
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -161,8 +161,8 @@ pub mod pallet {
 			// funds the next time new funds come in. Or if we need to be more vigorous, then we could
 			// implement bonding of free funds in on_initialize, but doing that once every six seconds
 			// seems expensive unless our liquid staking offering is extremely active.
-			let not_yet_bonded: T::StakingInterface::Balance = T::MainCurrency::free_balance(&pot);
-			match <T as Config>::StakingInterface::bond_extra(pot, not_yet_bonded) { // Confused: Shouldn't this be signed?
+			let not_yet_bonded: <T as Config>::StakingInterface::Balance = T::MainCurrency::free_balance(&pot);
+			match T::StakingInterface::bond_extra(pot, not_yet_bonded) { // Confused: Shouldn't this be signed?
 				// An unorthodox use of an event to signal an error condition. We don't want to fail the transaction
 				// if we fail to bond at this point, but we do want some indication out in the world that bonding failed.
 				// Success will result in a Bonded event from the staking pallet so we don't need an event for that.
