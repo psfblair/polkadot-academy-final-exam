@@ -19,7 +19,7 @@ use sp_std::collections::btree_map::BTreeMap;
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 type BalanceImpl = u128;
-pub type AccountId = u64;
+pub type AccountIdImpl = u64;
 
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
@@ -76,7 +76,7 @@ impl pallet_balances::Config<DerivativeToken> for Test {
 	type Event = Event;
 	type DustRemoval = ();
 	type ExistentialDeposit = ExistentialDepositImpl;
-	type AccountStore = StorageMapShim<pallet_balances::pallet::Account<Test, DerivativeToken>, frame_system::Provider<Test>, Self::AccountId, pallet_balances::AccountData<BalanceImpl>>;
+	type AccountStore = StorageMapShim<pallet_balances::pallet::Account<Test, DerivativeToken>, frame_system::Provider<Test>, AccountIdImpl, pallet_balances::AccountData<BalanceImpl>>;
 	type WeightInfo = ();
 }
 
@@ -84,16 +84,16 @@ impl pallet_balances::Config<DerivativeToken> for Test {
 parameter_types! {
 	pub static CurrentEra: EraIndex = 0;
 	pub static BondingDuration: EraIndex = 3;
-	pub storage BondedBalanceMap: BTreeMap<AccountId, Balance> = Default::default();
-	pub storage UnbondingBalanceMap: BTreeMap<AccountId, Balance> = Default::default();
+	pub storage BondedBalanceMap: BTreeMap<AccountIdImpl, BalanceImpl> = Default::default();
+	pub storage UnbondingBalanceMap: BTreeMap<AccountIdImpl, BalanceImpl> = Default::default();
 	#[derive(Clone, PartialEq)]
 	pub static MaxUnbonding: u32 = 8;
-	pub storage Nominations: Option<Vec<AccountId>> = None;
+	pub storage Nominations: Option<Vec<AccountIdImpl>> = None;
 }
 
 pub struct StakingMock;
 impl StakingMock {
-	pub(crate) fn set_bonded_balance(who: AccountId, bonded: BalanceImpl) {
+	pub(crate) fn set_bonded_balance(who: AccountIdImpl, bonded: BalanceImpl) {
 		let mut x = BondedBalanceMap::get();
 		x.insert(who, bonded);
 		BondedBalanceMap::set(&x)
@@ -102,7 +102,7 @@ impl StakingMock {
 
 impl sp_staking::StakingInterface for StakingMock {
 	type Balance = BalanceImpl;
-	type AccountId = Self::AccountId;
+	type AccountId = AccountIdImpl;
 
 	fn minimum_bond() -> Self::Balance {
 		10
@@ -188,7 +188,7 @@ impl frame_system::Config for Test {
 	type BlockNumber = u64;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
-	type AccountId = u64;
+	type AccountId = AccountIdImpl;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
 	type Event = Event;
