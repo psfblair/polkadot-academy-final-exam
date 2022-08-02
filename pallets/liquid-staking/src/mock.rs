@@ -1,7 +1,9 @@
 use crate as pallet_liquid_staking;
 use frame_support::{
 	pallet_prelude::*,
-	traits::{ConstU16, ConstU64, StorageMapShim,},
+	traits::{ConstU16, ConstU64, StorageMapShim,
+		tokens::Balance,
+	},
 	storage::bounded_btree_map::BoundedBTreeMap,
 	PalletId, parameter_types,
 };
