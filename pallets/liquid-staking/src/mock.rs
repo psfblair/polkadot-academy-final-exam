@@ -8,7 +8,7 @@ use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup, Zero},
-	BuildStorage, DispatchError
+	BuildStorage, DispatchError::Other
 };
 use sp_staking::{EraIndex, StakingInterface};
 use sp_std::collections::btree_map::BTreeMap;
