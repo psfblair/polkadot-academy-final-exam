@@ -124,7 +124,7 @@ fn add_stake_mints_sdot_for_later_staker_after_slash() {
 
 // #[ignore] // Right now this isn't passing because the test setup to lock part of the balance of the stash account isn't working.
 #[test]
-fn add_stake_bonds_submitted stake() {
+fn add_stake_bonds_submitted_stake() {
 	let user_account_id = 1;
 	let stash_account_id = stash_account_id();
 	let bonded_amount = 20;

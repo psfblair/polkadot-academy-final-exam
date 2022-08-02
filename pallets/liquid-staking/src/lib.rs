@@ -195,7 +195,7 @@ pub mod pallet {
 			match T::StakingInterface::bond_extra(pot.clone(), amount) { // Confused: Shouldn't this be signed?
 
 				// See if we got an error because the pot was not yet bonded, by trying to bond it. If that fails, we bail.
-				Err(err) => T::StakingInterface::bond(pot.clone(), Self::controller_account_id(), amount, pot.clone())?
+				Err(err) => T::StakingInterface::bond(pot.clone(), Self::controller_account_id(), amount, pot.clone())?,
 				_ => ()
 			}
 
