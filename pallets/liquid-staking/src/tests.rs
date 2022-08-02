@@ -4,7 +4,7 @@ use crate::{
 };
 use frame_support::{
 	traits::{Currency, LockableCurrency, WithdrawReasons},
-	assert_noop, assert_ok
+	BoundedVec, assert_noop, assert_ok
 };
 use frame_system::pallet::Pallet;
 use sp_staking::StakingInterface;
