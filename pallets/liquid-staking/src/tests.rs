@@ -237,7 +237,6 @@ fn add_stake_fails_when_max_stake_exceeded() {
 
 /////////////////////////////////////// VALIDATOR VOTE TESTS ////////////////////////////////////////////
 
-
 #[test]
 fn nominations_for_validators_are_stored() {
 	let user1_account_id = 1;
@@ -256,12 +255,12 @@ fn nominations_for_validators_are_stored() {
 		// Assert: Account 1 nominations are recorded
 		let first_nomination_map = std::collections::HashMap::from(nominations_1);
 		for validator in 10..=17 {
-			let err_str = format!("Initial nomination for validator {} was not stored correctly", validator);
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2, err_str);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2,
+				format!("Initial nomination for validator {} was not stored correctly: expected {{}} got {{}}", validator));
 		}
 		for validator in 18..=25 {
-			let err_str = format!("Initial nomination for validator {} was not stored correctly", validator);
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3, err_str);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3,
+				format!("Initial nomination for validator {} was not stored correctly: expected {{}} got {{}}", validator));
 		}
 
 
@@ -277,20 +276,20 @@ fn nominations_for_validators_are_stored() {
 			 (26, 2),(27, 2),(28, 2),(29, 2),(30, 2),(31, 2),(32, 2),(33, 2),(34, 2),(35, 2)]
 		);
 		for validator in 10..=17 {
-			let err_str = format!("Votes for validator {} were not stored correctly after second nomination", validator);
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2, err_str);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2,
+				format!("Votes for validator {} were not stored correctly after second nomination: expected {{}} got {{}}", validator));
 		}
 		for validator in 18..=19 {
-			let err_str = format!("Votes for validator {} were not stored correctly after second nomination", validator);
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3, err_str);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3,
+				format!("Votes for validator {} were not stored correctly after second nomination: expected {{}} got {{}}", validator));
 		}
 		for validator in 20..=25 {
-			let err_str = format!("Votes for validator {} were not stored correctly after second nomination", validator);
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5, err_str);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5,
+				format!("Votes for validator {} were not stored correctly after second nomination: expected {{}} got {{}}", validator));
 		}
 		for validator in 26..=35 {
-			let err_str = format!("Votes for validator {} were not stored correctly after second nomination", validator);
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5, err_str);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5,
+				format!("Votes for validator {} were not stored correctly after second nomination: expected {{}} got {{}}", validator));
 		}
 	});	
 }
