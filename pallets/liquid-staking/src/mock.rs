@@ -1,5 +1,6 @@
 use crate as pallet_liquid_staking;
 use frame_support::{
+	pallet_prelude::*,
 	traits::{ConstU16, ConstU64, StorageMapShim,},
 	storage::bounded_btree_map::BoundedBTreeMap,
 	PalletId, parameter_types,
