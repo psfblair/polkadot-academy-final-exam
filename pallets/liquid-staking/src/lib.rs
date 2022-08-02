@@ -68,7 +68,7 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// An account has staked a certain amount of the staking token with the pallet [account, amount]
-		StakeAdded(AccountIdOf<T>::, BalanceTypeOf<T>),
+		StakeAdded(AccountIdOf<T>, BalanceTypeOf<T>),
 
 		/// The pot account was unable to bond some free funds [account, error]
 		BondingFailed(AccountIdOf<T>, DispatchError),
@@ -162,7 +162,7 @@ pub mod pallet {
 			// implement bonding of free funds in on_initialize, but doing that once every six seconds
 			// seems expensive unless our liquid staking offering is extremely active.
 			let not_yet_bonded = T::MainCurrency::free_balance(&pot);
-			match T::StakingInterface::bond_extra(pot.into(), not_yet_bonded.into()) { // Confused: Shouldn't this be signed?
+			match T::StakingInterface::bond_extra(pot, not_yet_bonded) { // Confused: Shouldn't this be signed?
 				// An unorthodox use of an event to signal an error condition. We don't want to fail the transaction
 				// if we fail to bond at this point, but we do want some indication out in the world that bonding failed.
 				// Success will result in a Bonded event from the staking pallet so we don't need an event for that.
