@@ -139,7 +139,7 @@ fn add_stake_bonds_with_all_free_funds_available() {
 	
 	new_test_ext(initial_balances).execute_with(|| {
 		// Set up a state where 20 of the balance of 30 are already locked and bonded
-		int bonded_amount = 20;
+		let bonded_amount = 20;
 		StakingMock::bond_extra(Origin::signed(stash_account_id), bonded_amount);
 		<MainBalances as LockableCurrency<u64>>::set_lock(*b"lockid", &stash_account_id, bonded_amount, WithdrawReasons::RESERVE);
 
