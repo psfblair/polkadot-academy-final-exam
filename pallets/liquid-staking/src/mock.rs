@@ -4,7 +4,6 @@ use frame_support::{
 	traits::{ConstU16, ConstU64, StorageMapShim,
 		tokens::Balance,
 	},
-	storage::bounded_btree_map::BoundedBTreeMap,
 	PalletId, parameter_types,
 };
 use sp_core::H256;
@@ -100,7 +99,7 @@ impl StakingMock {
 	}
 }
 
-impl sp_staking::StakingInterface for StakingMock {
+impl StakingInterface for StakingMock {
 	type Balance = BalanceImpl;
 	type AccountId = AccountIdImpl;
 
