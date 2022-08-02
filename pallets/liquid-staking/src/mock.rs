@@ -90,7 +90,7 @@ parameter_types! {
 
 pub struct StakingMock;
 impl StakingMock {
-	pub(crate) fn set_bonded_balance(who: AccountIdImpl, bonded: BalanceImpl) {
+	pub(crate) fn set_bonded_balance(who: crate::AccountIdOf<Test>, bonded: crate::BalanceTypeOf<Test>) {
 		let mut x = BondedBalanceMap::get();
 		x.insert(who, bonded);
 		BondedBalanceMap::set(&x)
@@ -98,8 +98,8 @@ impl StakingMock {
 }
 
 impl StakingInterface for StakingMock {
-	type Balance = Test::MainCurrency::Balance;
-	type AccountId = frame_system::Config::AccountId;
+	type Balance = crate::BalanceTypeOf<Test>;
+	type AccountId = crate::AccountIdOf<Test>;
 
 	fn minimum_bond() -> Self::Balance {
 		10
