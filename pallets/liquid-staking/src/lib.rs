@@ -23,13 +23,12 @@ pub mod pallet {
             PalletId,
             pallet_prelude::*,
             traits::{
-                Currency,
-                LockableCurrency,
+                Currency, LockableCurrency, WithdrawReasons,
                 tokens::ExistenceRequirement,
             }
         };
     use frame_support::sp_runtime::{
-            traits::{AccountIdConversion, CheckedMul, CheckedDiv,}
+            traits::{AccountIdConversion, CheckedMul, CheckedDiv, Zero}
         };
 	use sp_staking::{StakingInterface, EraIndex};
 	use crate::{AccountIdOf, BalanceTypeOf};
@@ -226,23 +225,24 @@ pub mod pallet {
 
 			// Determine if we are within n blocks of the beginning of an era, else reject 
 			// Determine whether the submission has enough tokens in their free balance to match the tokens voted. If not, reject.
+            let total_voted = nominations.iter().fold(Zero::zero(), |accum, (_, votes)| accum.checked_add(votes))?; 
 			// Determine if the submission is voting for accounts that are not actually nominatable.
 
 			// Lock that quantity of derivative token in the origin's account
-			T::DerivativeCurrency::set_lock(PalletId2.get(), &who, total_voted, WithdrawReasons::RESERVE);
+			T::DerivativeCurrency::set_lock(T::PalletId2::get().into(), &who, total_voted, WithdrawReasons::RESERVE);
 
 			// Store the account and the number of tokens locked for that account (add to the total)
-			NominationLocksStorage<T>::try_mutate(who, |maybe_value| {
+			NominationLocksStorage::<T>::try_mutate(who, |maybe_value| {
 				match maybe_value {
-					Some(prior_amount) => *maybe_value = Some(prior_amount + total_voted),
+					Some(prior_amount) => *maybe_value = Some(prior_amount.checked_add(total_voted)?),
 					None => *maybe_value = Some(total_voted),
 				}
 			})?;
 			// Store the nominations and the amounts (adding to the totals)
 			for (validator, votes) in nominations.iter() {
-				NominationsStorage<T>::try_mutate(validator, |maybe_value| {
+				NominationsStorage::<T>::try_mutate(validator, |maybe_value| {
 					match maybe_value {
-						Some(prior_amount) => *maybe_value = Some(prior_amount + votes),
+						Some(prior_amount) => *maybe_value = Some(prior_amount.checked_add(votes)?),
 						None => *maybe_value = Some(votes),
 					}
 				})?;		
