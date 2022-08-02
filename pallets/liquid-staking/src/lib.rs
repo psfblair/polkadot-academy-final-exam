@@ -123,6 +123,26 @@ pub mod pallet {
 	
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		/// Establish the pallet as a nominator if it is not already one. We are taking into account that this
+		/// pallet might not have been in use at genesis, so whenever there is a runtime upgrade we check to see
+		/// if we are a nominator and if not, make it so.
+		fn on_runtime_upgrade() -> Weight {
+			let stash_account_id = Self::stash_account_id();
+			// nominations returns an option with the nominations of a stash, if they are a nominator, None otherwise.
+			let _ = T::StakingInterface::nominations(stash_account_id).unwrap_or_else(|| 
+				// At least the minimum bond amount must be present in the stash account for this pallet to work.
+				if T::MainCurrency::free_balance(&stash_account_id); T::StakingInterface::minimum_bond() {
+					T::StakingInterface::bond(
+						stash_account_id,
+						Self::controller_account_id(),
+						T::StakingInterface::minimum_bond(), 
+						stash_account_id
+					)
+				}
+			);
+			200 // TODO Not sure what this should be...
+		}
+
 		fn on_initialize(_n: T::BlockNumber) -> Weight {
 			0
 		}
@@ -178,8 +198,8 @@ pub mod pallet {
 		}
 
 		/// Submit an amount of the derivative token to redeem for the main token. The derivative
-		/// token is immediately burned; the amount redeemed is recorded in storage along with the
-		/// era the underlying funds will be available, and keyed by a transaction ID that can be
+		/// token is immediately burned; the amount is recorded in storage along with the era
+		/// the underlying funds will be available, and keyed by a transaction ID that can be
 		/// used by the staker to retrieve the funds as of that era. The DerivativeRedeemed
 		/// event indicates the era when the active bonded balance can be withdrawn and the 
 		/// transaction ID that can be used to withdraw it.
@@ -188,9 +208,15 @@ pub mod pallet {
 
 		}
 
-		/// TODO Add documentation!!!
+		/// Withdraw the amount of the main token that corresponds to the amount of derivative
+		/// token redeemed in the given transaction_id (which is obtained from the event deposited
+		/// by `redeem_stake`). The unbonding period has to have elapsed before withdrawal may
+		/// proceed. The amount redeemed corresponds to the current value of the quantity of 
+		/// derivative token redeemed in the prior call to `redeem_stake`, not the value at the 
+		/// time of redemption; it is important to note that the value may have been affected by 
+		/// slashing or rewards in the meantime. 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))] // TODO Benchmark eventually
-		pub fn withdraw_stake(origin: OriginFor<T>, amount: BalanceTypeOf<T>) -> DispatchResult {
+		pub fn withdraw_stake(origin: OriginFor<T>, transaction_id: T::TransactionId) -> DispatchResult {
 
 		}
 
