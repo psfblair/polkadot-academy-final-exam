@@ -354,6 +354,10 @@ fn nominator_vote_is_rejected_if_votes_exceed_free_balance() {
 }
 
 #[test]
+fn nominator_vote_is_rejected_if_votes_overflow() {
+}
+
+#[test]
 fn nominator_vote_is_rejected_if_nominees_are_not_candidate_validators() {
 }
 

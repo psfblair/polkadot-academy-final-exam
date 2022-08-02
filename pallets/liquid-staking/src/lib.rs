@@ -102,8 +102,16 @@ pub mod pallet {
 		InsufficientStake,
 		/// Amount staked exceeded maximum amount allowed
 		ExceededMaxStake,
+
 		// VoteUnauthorized,
-		// VoteQuantityInvalid,
+
+		/// The quantity of votes submitted exceeded the submitter's free balance of
+		/// the derivative token or exceeded the maximum allowable value of those tokens.
+		VoteQuantityInvalid,
+
+		/// The number of votes received by the validator exceeds the maximum permissible amount.
+		ValidatorVoteQuantityInvalid,
+		
 		// NoSuchValidator,
 		// NoSuchReferendum,
 		// ReferendumUnavailable,
@@ -229,7 +237,10 @@ pub mod pallet {
 			// TODO Determine if the submission is voting for accounts that are not actually nominatable.
 
 			// Determine whether the submission has enough tokens in their free balance to match the tokens voted. If not, reject.
-            let total_voted = nominations.iter().fold(Zero::zero(), |accum: BalanceTypeOf<T>, (_, votes)| accum.checked_add(votes))?; 
+            let total_voted = nominations.iter().fold(
+					Zero::zero(), 
+					|accum: BalanceTypeOf<T>, (_, votes)| accum.checked_add(votes).ok_or(Error::<T>::VoteQuantityInvalid)?
+			); 
 
 			// Lock that quantity of derivative token in the origin's account
 			T::DerivativeCurrency::set_lock(NOMINATION_LOCK_ID, &who, total_voted, WithdrawReasons::RESERVE);
@@ -237,7 +248,7 @@ pub mod pallet {
 			// Store the account and the number of tokens locked for that account (add to the total)
 			NominationLocksStorage::<T>::try_mutate(who, |maybe_value| {
 				match maybe_value {
-					Some(prior_amount) => *maybe_value = Some(prior_amount.checked_add(total_voted)?),
+					Some(prior_amount) => *maybe_value = Some(prior_amount.checked_add(total_voted).ok_or(Error::<T>::VoteQuantityInvalid)?),
 					None => *maybe_value = Some(total_voted),
 				}
 			})?;
@@ -245,7 +256,7 @@ pub mod pallet {
 			for (validator, votes) in nominations.iter() {
 				NominationsStorage::<T>::try_mutate(validator, |maybe_value| {
 					match maybe_value {
-						Some(prior_amount) => *maybe_value = Some(prior_amount.checked_add(votes)?),
+						Some(prior_amount) => *maybe_value = Some(prior_amount.checked_add(votes).ok_or(Error::<T>::ValidatorVoteQuantityInvalid)??),
 						None => *maybe_value = Some(votes),
 					}
 				})?;		
