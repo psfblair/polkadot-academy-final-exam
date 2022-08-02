@@ -111,7 +111,7 @@ pub mod pallet {
 
 		/// The number of votes received by the validator exceeds the maximum permissible amount.
 		ValidatorVoteQuantityInvalid,
-		
+
 		// NoSuchValidator,
 		// NoSuchReferendum,
 		// ReferendumUnavailable,
@@ -237,10 +237,16 @@ pub mod pallet {
 			// TODO Determine if the submission is voting for accounts that are not actually nominatable.
 
 			// Determine whether the submission has enough tokens in their free balance to match the tokens voted. If not, reject.
-            let total_voted = nominations.iter().fold(
-					Zero::zero(), 
-					|accum: BalanceTypeOf<T>, (_, votes)| accum.checked_add(votes).ok_or(Error::<T>::VoteQuantityInvalid)?
+            let maybe_total_voted = nominations.iter().fold(
+					Some(Zero::zero()), 
+					|accum: Option<BalanceTypeOf<T>>, (_, votes)| {
+						match accum {
+							None => None,
+							Some(sum) => sum.checked_add(votes)
+						}
+					}
 			); 
+			let total_voted = maybe_total_voted.ok_or(Error::<T>::VoteQuantityInvalid)?;
 
 			// Lock that quantity of derivative token in the origin's account
 			T::DerivativeCurrency::set_lock(NOMINATION_LOCK_ID, &who, total_voted, WithdrawReasons::RESERVE);
