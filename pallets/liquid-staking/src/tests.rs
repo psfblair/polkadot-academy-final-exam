@@ -125,9 +125,10 @@ fn add_stake_mints_sdot_for_later_staker_after_slash() {
 #[test]
 fn add_stake_bonds_the_pot_if_not_yet_bonded() {
 	let user_account_id = 1;
+	let stash_account_id = stash_account_id()
 	let initial_balances = vec![
 		(user_account_id, 10, 0),
-		(stash_account_id(), 0, 0),
+		(stash_account_id, 0, 0),
 		(controller_account_id(), 0, 0),
 	];
 	// Arrange: Whatever account balances
