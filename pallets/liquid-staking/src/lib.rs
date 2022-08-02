@@ -81,9 +81,6 @@ pub mod pallet {
 		/// An account has staked a certain amount of the staking token with the pallet [account, amount]
 		StakeAdded(AccountIdOf<T>, BalanceTypeOf<T>),
 
-		/// The pot account was unable to bond some free funds [account, error]
-		BondingFailed(AccountIdOf<T>, DispatchError),
-
 		/// An account has redeemed a certain amount of the derivative token with the pallet. The underlying 
 		/// main token may be claimed on the era specified in the event. [account, amount, era, transaction_id]
 		DerivativeRedeemed(AccountIdOf<T>, BalanceTypeOf<T>, EraIndex, T::TransactionId),
@@ -194,24 +191,16 @@ pub mod pallet {
 			T::MainCurrency::transfer(&who, &pot, amount, ExistenceRequirement::KeepAlive)?;			
 			T::DerivativeCurrency::deposit_creating(&who, derivative_quantity_to_mint);
 
-			// Emit an event.
-			Self::deposit_event(Event::StakeAdded(who, amount));
+			// Note: If we entirely fail to bond, the transaction will fail and the staker will not be staked.
+			match T::StakingInterface::bond_extra(pot.clone(), amount) { // Confused: Shouldn't this be signed?
 
-			// We assume 'pot' is registered as a staker at this point. We will bond all free funds 
-			// in the stash account instead of bonding only the funds that just came in, in case we 
-			// received a deposit in a prior transaction that was not able to be bonded. Also, we
-			// won't fail this transaction if the funds came in but bonding fails; we will bond those
-			// funds the next time new funds come in. Or if we need to be more vigorous, then we could
-			// implement bonding of free funds in on_initialize, but doing that once every six seconds
-			// seems expensive unless our liquid staking offering is extremely active.
-			let not_yet_bonded = T::MainCurrency::free_balance(&pot);
-			match T::StakingInterface::bond_extra(pot.clone(), not_yet_bonded) { // Confused: Shouldn't this be signed?
-				// An unorthodox use of an event to signal an error condition. We don't want to fail the transaction
-				// if we fail to bond at this point, but we do want some indication out in the world that bonding failed.
-				// Success will result in a Bonded event from the staking pallet so we don't need an event for that.
-				Err(err) => Self::deposit_event(Event::BondingFailed(pot, err)),
+				// See if we got an error because the pot was not yet bonded, by trying to bond it. If that fails, we bail.
+				Err(err) => T::StakingInterface::bond(pot.clone(), Self::controller_account_id(), amount, pot.clone())?
 				_ => ()
 			}
+
+			// Emit an event.
+			Self::deposit_event(Event::StakeAdded(who, amount));
 
 			Ok(())
 		}

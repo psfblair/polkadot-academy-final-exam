@@ -122,6 +122,32 @@ fn add_stake_mints_sdot_for_later_staker_after_slash() {
 	});	
 }
 
+// #[ignore] // Right now this isn't passing because the test setup to lock part of the balance of the stash account isn't working.
+#[test]
+fn add_stake_bonds_submitted stake() {
+	let user_account_id = 1;
+	let stash_account_id = stash_account_id();
+	let bonded_amount = 20;
+	let initial_balances = vec![
+		(user_account_id, 10, 0),
+		(stash_account_id, bonded_amount, 0),
+	];
+	
+	// Arrange: Stash account has 30 DOT
+	new_test_ext(initial_balances).execute_with(|| {
+		// Arrange: Stash account is bonded and stash funds are locked
+		assert_ok!(StakingMock::bond(stash_account_id, controller_account_id(), bonded_amount, stash_account_id));
+		<MainBalances as LockableCurrency<u64>>::set_lock(*b"stlockid", &stash_account_id, bonded_amount, WithdrawReasons::RESERVE);
+
+		// Act: Add a stake of 5
+		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 5));
+
+		// Assert: The entire stash account including the new stake is bonded
+		//         (and locked, but the mock implementation of staking doesn't do that)
+		assert_eq!(StakingMock::active_stake(&stash_account_id), Some(25), "pot bonded staked amount is wrong");
+	});
+}
+
 #[test]
 fn add_stake_bonds_the_pot_if_not_yet_bonded() {
 	let user_account_id = 1;
@@ -156,31 +182,6 @@ fn add_stake_deposits_stake_added_event() {
 		// Assert: Event is deposited
 		Pallet::<Test>::assert_has_event(Event::StakeAdded(user_account_id, 4).into());
 	});	
-}
-
-#[ignore] // Right now this isn't passing because the test setup to lock part of the balance of the stash account isn't working.
-#[test]
-fn add_stake_bonds_with_all_free_funds_available() {
-	let user_account_id = 1;
-	let stash_account_id = stash_account_id();
-	let initial_balances = vec![
-		(user_account_id, 10, 0),
-		(stash_account_id, 30, 0),
-	];
-	
-	// Arrange: Stash account has 30 DOT
-	new_test_ext(initial_balances).execute_with(|| {
-		// Arrange: Set up a state where 20 of the balance of 30 are already locked and bonded
-		let bonded_amount = 20;
-		assert_ok!(StakingMock::bond(stash_account_id, controller_account_id(), bonded_amount, stash_account_id));
-		<MainBalances as LockableCurrency<u64>>::set_lock(*b"stlockid", &stash_account_id, bonded_amount, WithdrawReasons::RESERVE);
-
-		// Act: Add a stake of 5
-		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 5));
-
-		// Assert: The entire free amount in the stash account is bonded (and locked, but the mock implementation of staking doesn't do that)
-		assert_eq!(StakingMock::active_stake(&stash_account_id), Some(35), "pot bonded staked amount is wrong");
-	});
 }
 
 /////////////////////////////////////// ADD STAKE FAILURE SCENARIO TESTS ////////////////////////////////////////////
