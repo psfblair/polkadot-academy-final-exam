@@ -7,6 +7,7 @@ use frame_support::{
 	assert_noop, assert_ok
 };
 use frame_system::pallet::Pallet;
+use sp_staking::StakingInterface;
 
 #[test]
 fn test_genesis_balances() {
