@@ -255,12 +255,10 @@ fn nominations_for_validators_are_stored() {
 		// Assert: Account 1 nominations are recorded
 		let first_nomination_map = std::collections::HashMap::from(nominations_1);
 		for validator in 10..=17 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2,
-				format!("Initial nomination for validator {} was not stored correctly: expected {{}} got {{}}", validator));
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2);
 		}
 		for validator in 18..=25 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3,
-				format!("Initial nomination for validator {} was not stored correctly: expected {{}} got {{}}", validator));
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3);
 		}
 
 
@@ -276,20 +274,16 @@ fn nominations_for_validators_are_stored() {
 			 (26, 2),(27, 2),(28, 2),(29, 2),(30, 2),(31, 2),(32, 2),(33, 2),(34, 2),(35, 2)]
 		);
 		for validator in 10..=17 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2,
-				format!("Votes for validator {} were not stored correctly after second nomination: expected {{}} got {{}}", validator));
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2);
 		}
 		for validator in 18..=19 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3,
-				format!("Votes for validator {} were not stored correctly after second nomination: expected {{}} got {{}}", validator));
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3);
 		}
 		for validator in 20..=25 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5,
-				format!("Votes for validator {} were not stored correctly after second nomination: expected {{}} got {{}}", validator));
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5);
 		}
 		for validator in 26..=35 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5,
-				format!("Votes for validator {} were not stored correctly after second nomination: expected {{}} got {{}}", validator));
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5);
 		}
 	});	
 }
