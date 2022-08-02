@@ -252,7 +252,8 @@ fn nominations_for_validators_are_stored() {
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user1_account_id), nominations_1));
 
 		// Assert: Account 1 nominations are recorded
-		assert_eq!(LiquidStakingModule::NominationsStorage::get(&user1_account_id).unwrap(), HashMap::from(nominations_1),
+		let first_nomination_map = std::collections::HashMap::from(nominations_1);
+		assert_eq!(LiquidStakingModule::NominationsStorage::get(&user1_account_id).unwrap(), first_nomination_map,
 			"Initial nominations are stored correctly");
 
 		// Act: Account 2 submits nominations
@@ -261,7 +262,7 @@ fn nominations_for_validators_are_stored() {
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user2_account_id), nominations_2));
 
 		// Assert: Account 2 nominations are recorded and storage reflects everything
-		let second_nomination_map = HashMap::from(
+		let second_nomination_map = std::collections::HashMap::from(
 			[(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
 			 (18, 3),(19, 3),(20, 5),(21, 5),(22, 5),(23, 5),(24, 5),(25, 5),
 			 (26, 2),(27, 2),(28, 2),(29, 2),(30, 2),(31, 2),(32, 2),(33, 2),(34, 2),(35, 2)]
