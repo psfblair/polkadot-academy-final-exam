@@ -29,10 +29,9 @@ pub mod pallet {
             }
         };
     use frame_support::sp_runtime::{
-            traits::{AccountIdConversion, CheckedMul, CheckedDiv, Hash}
+            traits::{AccountIdConversion, CheckedMul, CheckedDiv,}
         };
 	use sp_staking::{StakingInterface, EraIndex};
-	
 	use crate::{AccountIdOf, BalanceTypeOf};
 
 	#[pallet::config]
@@ -41,7 +40,7 @@ pub mod pallet {
 
 		type MainCurrency: LockableCurrency<AccountIdOf<Self>>;
 		type DerivativeCurrency: LockableCurrency<AccountIdOf<Self>, Balance = BalanceTypeOf<Self>>;
-		type TransactionId: Hash;
+		type TransactionId: IsType<<Self as frame_system::Config>::Hash> + Encode + Decode + Clone + PartialEq + TypeInfo + core::fmt::Debug;
        
         #[pallet::constant]
 		type PalletId: Get<PalletId>;
@@ -75,7 +74,7 @@ pub mod pallet {
 
 		/// An account has redeemed a certain amount of the derivative token with the pallet. The underlying 
 		/// main token may be claimed on the era specified in the event. [account, amount, era, transaction_id]
-		DerivativeRedeemed(AccountIdOf<T>, BalanceTypeOf<T>, EraIndex, TransactionId),
+		DerivativeRedeemed(AccountIdOf<T>, BalanceTypeOf<T>, EraIndex, T::TransactionId),
 		
 		/// The staking tokens associated with the redeemed liquid tokens have been unbonded and 
 		/// credited to the staker [account, amount]
@@ -128,18 +127,18 @@ pub mod pallet {
 		/// if we are a nominator and if not, make it so.
 		fn on_runtime_upgrade() -> Weight {
 			let stash_account_id = Self::stash_account_id();
-			// nominations returns an option with the nominations of a stash, if they are a nominator, None otherwise.
-			let _ = T::StakingInterface::nominations(stash_account_id).unwrap_or_else(|| 
+			// To find out if we are bonded, we use total_stake because the nominations function is
+            // only for benchmarking. If it returns a None we assume this means we aren't bonded.
+			if T::StakingInterface::total_stake(&stash_account_id).is_none() && 
 				// At least the minimum bond amount must be present in the stash account for this pallet to work.
-				if T::MainCurrency::free_balance(&stash_account_id) > T::StakingInterface::minimum_bond() {
+			    T::MainCurrency::free_balance(&stash_account_id) > T::StakingInterface::minimum_bond() {
 					T::StakingInterface::bond(
-						stash_account_id,
+						stash_account_id.clone(),
 						Self::controller_account_id(),
 						T::StakingInterface::minimum_bond(), 
 						stash_account_id
-					)
-				}
-			);
+					);
+			};
 			200 // TODO Not sure what this should be...
 		}
 
@@ -205,7 +204,7 @@ pub mod pallet {
 		/// transaction ID that can be used to withdraw it.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))] // TODO Benchmark eventually
 		pub fn redeem_stake(origin: OriginFor<T>, amount: BalanceTypeOf<T>) -> DispatchResult {
-
+            Ok(())
 		}
 
 		/// Withdraw the amount of the main token that corresponds to the amount of derivative
@@ -217,7 +216,7 @@ pub mod pallet {
 		/// slashing or rewards in the meantime. 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))] // TODO Benchmark eventually
 		pub fn withdraw_stake(origin: OriginFor<T>, transaction_id: T::TransactionId) -> DispatchResult {
-
+            Ok(())
 		}
 
 	}
