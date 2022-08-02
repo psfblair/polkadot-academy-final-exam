@@ -18,7 +18,7 @@ pub type BalanceTypeOf<T> = <<T as Config>::MainCurrency as Currency<AccountIdOf
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_system::{Origin, pallet_prelude::*};
+	use frame_system::{pallet_prelude::*};
 	use frame_support::{
             PalletId,
             pallet_prelude::*,
@@ -162,7 +162,7 @@ pub mod pallet {
 			// implement bonding of free funds in on_initialize, but doing that once every six seconds
 			// seems expensive unless our liquid staking offering is extremely active.
 			let not_yet_bonded: <<T as pallet::Config>::StakingInterface as StakingInterface>::Balance = 
-					T::MainCurrency::free_balance(&pot);
+					T::MainCurrency::free_balance(pot);
 			match T::StakingInterface::bond_extra(&pot, not_yet_bonded) { // Confused: Shouldn't this be signed?
 				// An unorthodox use of an event to signal an error condition. We don't want to fail the transaction
 				// if we fail to bond at this point, but we do want some indication out in the world that bonding failed.
