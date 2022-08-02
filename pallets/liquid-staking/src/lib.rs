@@ -59,9 +59,21 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
+	/// The quantity of derivative tokens an account has locked during the voting period.
+	///
+	/// TWOX-QUESTION: `AccountId`s are crypto hashes anyway, so is this safe? What if an attacker knew a user's account ID and
+	/// wanted to change their votes?  
 	#[pallet::storage]
-	#[pallet::getter(fn something)]
-	pub type Something<T> = StorageValue<_, u32>;
+	#[pallet::getter(fn nomination_locks)]
+	pub type NominationLocksStorage<T> = StorageMap<_, Twox64Concat, T::AccountId, BalanceTypeOf<T>>;
+
+	/// The votes 
+	///
+	/// TWOX-QUESTION: `AccountId`s are crypto hashes anyway, so is this safe? Aren't the IDs of validators generally known, and
+	/// if so would this be liable to being attacked by those who know those IDs?
+	#[pallet::storage]
+	#[pallet::getter(fn nominations)]
+	pub type NominationsStorage<T> = StorageMap<_, Twox64Concat, T::AccountId, BalanceTypeOf<T>>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -142,6 +154,14 @@ pub mod pallet {
 			200 // TODO Not sure what this should be...
 		}
 
+		// 1. If the current era is different from the era of the previous block, set this 
+		//    block as era start and reset the previous era tracker
+		// 2. Otherwise: Determine if we are voting_window blocks from the beginning of the era. If not, do nothing.
+		// 3. If so, then:
+			// Unlock all derivative tokens locked
+			// Tally all votes
+			// Adjust nominations
+			// Reinitialize storage for the next round of voting - both storage of locked tokens and storage of votes
 		fn on_initialize(_n: T::BlockNumber) -> Weight {
 			0
 		}
@@ -219,5 +239,26 @@ pub mod pallet {
             Ok(())
 		}
 
+		// At the beginning of an era we allow holders of the derivative token to choose who the pallet
+		// will nominate. A certain number of blocks of time is designated within which token holders may
+		// vote for nominators by calling this dispatchable with a slate of 16 candidates and an amount
+		// of derivative token backing each one, indicating the degree of support. These tokens are locked
+		// during the voting period to prevent duplicate voting. At the end of the voting period the votes
+		// are tallied. If the total number of votes is less than a majority of the total issuance of the
+		// derivative token, the nominations of the previous era remain unchanged. Otherwise, the pallet
+		// selects the sixteen top vote-getters and nominates them.
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))] // TODO Benchmark eventually
+		pub fn nominate(origin: OriginFor<T>, nominations: [(AccountIdOf<T>, BalanceTypeOf<T>); 16]) -> DispatchResult {
+			// Ensure signature
+			let who = ensure_signed(origin)?;
+
+			// Determine if we are within n blocks of the beginning of an era, else reject 
+			// Determine whether the submission has enough tokens in their free balance to match the tokens voted. If not, reject.
+			// TODO Determine if the submission is voting for accounts that are not actually nominatable.
+			// Lock that quantity of derivative token in the origin's account
+			// Store the account and the number of tokens locked for that account (add to the total)
+			// Store the nominations and the amounts (adding to the totals)
+            Ok(())
+		}
 	}
 }
