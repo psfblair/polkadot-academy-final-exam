@@ -145,7 +145,7 @@ fn add_stake_bonds_with_all_free_funds_available() {
 
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 5));
 
-		assert_eq!(StakingMock::active_stake(&stash_account_id()), Some(35), "pot bonded staked amount is as expected");
+		assert_eq!(StakingMock::active_stake(&stash_account_id), Some(35), "pot bonded staked amount is as expected");
 		assert_eq!(<MainBalances as Currency<u64>>::free_balance(&stash_account_id), 0, "stash is entirely locked");
 	});
 }
