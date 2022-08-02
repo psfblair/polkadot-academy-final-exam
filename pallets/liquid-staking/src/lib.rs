@@ -131,26 +131,6 @@ pub mod pallet {
 	
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		/// Establish the pallet as a nominator if it is not already one. We are taking into account that this
-		/// pallet might not have been in use at genesis, so whenever there is a runtime upgrade we check to see
-		/// if we are a nominator and if not, make it so.
-		fn on_runtime_upgrade() -> Weight {
-			let stash_account_id = Self::stash_account_id();
-			// To find out if we are bonded, we use total_stake because the nominations function is
-            // only for benchmarking. If it returns a None we assume this means we aren't bonded.
-			if T::StakingInterface::total_stake(&stash_account_id).is_none() && 
-				// At least the minimum bond amount must be present in the stash account for this pallet to work.
-			    T::MainCurrency::free_balance(&stash_account_id) > T::StakingInterface::minimum_bond() {
-					T::StakingInterface::bond(
-						stash_account_id.clone(),
-						Self::controller_account_id(),
-						T::StakingInterface::minimum_bond(), 
-						stash_account_id
-					);
-			};
-			200 // TODO Not sure what this should be...
-		}
-
 		// 1. If the current era is different from the era of the previous block, set this 
 		//    block as era start and reset the previous era tracker
 		// 2. Otherwise: Determine if we are voting_window blocks from the beginning of the era. If not, do nothing.

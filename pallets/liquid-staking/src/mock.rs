@@ -134,7 +134,8 @@ impl StakingInterface for StakingMock {
 
 	fn bond_extra(who: Self::AccountId, extra: Self::Balance) -> DispatchResult {
 		let mut x = BondedBalanceMap::get();
-		x.get_mut(&who).map(|v| *v += extra);
+		let stash_amount = x.get_mut(&who).ok_or(Error::<T>::NotStash)?;
+		stash_amount.map(|v| *stash_amount += extra);
 		BondedBalanceMap::set(&x);
 		Ok(())
 	}
