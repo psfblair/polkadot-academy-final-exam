@@ -43,11 +43,11 @@ fn add_stake_transfers_dot() {
 
 		// Assert: Money gets transferred to stash account
 		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&user_account_id), 7, 
-				"origin balance diminished by staked amount");	
+				"origin balance was not diminished by staked amount");	
 		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&stash_account_id()), 23, 
-				"stash account augmented by staked amount");
+				"stash account was not augmented by staked amount");
 		assert_eq!(<MainBalances as Currency<u64>>::total_balance(&controller_account_id()), 0, 
-				"staking does not affect controller account balance");
+				"controller account balance was not unaffected by staking");
 	});
 }
 
@@ -67,14 +67,14 @@ fn add_stake_mints_sdot_for_first_staker() {
 
 		// Assert: Account 1 gets back 3 sDOT
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_balance(&user_account_id), 3, 
-				"origin sDOT balance increased by staked amount at inception");	
+				"origin sDOT balance was not increased by staked amount at inception");	
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_issuance(), 3, 
-				"total sDOT issuance increased by staked amount at inception");
+				"total sDOT issuance was not increased by staked amount at inception");
 
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_balance(&stash_account_id()), 0, 
-				"stash sDOT account balance unaffected by staking");
+				"stash sDOT account balance was not unaffected by staking");
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_balance(&controller_account_id()), 0, 
-				"controller sDOT account balance unaffected by staking");
+				"controller sDOT account balance was not unaffected by staking");
 	});
 }
 
@@ -94,9 +94,9 @@ fn add_stake_mints_sdot_for_later_staker_after_rewards() {
 
 		// Assert: Account 1 gets back 2 sDOT
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_balance(&user_account_id), 5, 
-				"origin sDOT balance increased correctly");	
+				"origin sDOT balance did not increase correctly");	
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_issuance(), 5, 
-				"total sDOT issuance increased correctly");
+				"total sDOT issuance did not increase correctly");
 	});	
 }
 
@@ -116,9 +116,9 @@ fn add_stake_mints_sdot_for_later_staker_after_slash() {
 
 		// Assert: Account 1 gets back 6 sDOT
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_balance(&user_account_id), 9, 
-				"origin sDOT balance increased correctly");	
+				"origin sDOT balance did not increase correctly");	
 		assert_eq!(<DerivativeBalances as Currency<u64>>::total_issuance(), 9, 
-				"total sDOT issuance increased correctly");
+				"total sDOT issuance did not increase correctly");
 	});	
 }
 
@@ -137,7 +137,7 @@ fn add_stake_bonds_the_pot_if_not_yet_bonded() {
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 4));
 
 		// Assert: Pot is bonded for 4 DOT
-		assert_eq!(StakingMock::active_stake(&stash_account_id), Some(4), "pot bonded staked amount is as expected");
+		assert_eq!(StakingMock::active_stake(&stash_account_id), Some(4), "pot bonded staked amount is wrong");
 	});	
 }
 
@@ -179,7 +179,7 @@ fn add_stake_bonds_with_all_free_funds_available() {
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 5));
 
 		// Assert: The entire free amount in the stash account is bonded (and locked, but the mock implementation of staking doesn't do that)
-		assert_eq!(StakingMock::active_stake(&stash_account_id), Some(35), "pot bonded staked amount is as expected");
+		assert_eq!(StakingMock::active_stake(&stash_account_id), Some(35), "pot bonded staked amount is wrong");
 	});
 }
 
@@ -237,6 +237,7 @@ fn add_stake_fails_when_max_stake_exceeded() {
 
 /////////////////////////////////////// VALIDATOR VOTE TESTS ////////////////////////////////////////////
 
+
 #[test]
 fn nominations_for_validators_are_stored() {
 	let user1_account_id = 1;
@@ -255,12 +256,12 @@ fn nominations_for_validators_are_stored() {
 		// Assert: Account 1 nominations are recorded
 		let first_nomination_map = std::collections::HashMap::from(nominations_1);
 		for validator in 10..=17 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2,
-				format!("Initial nomination for validator {} was not stored correctly", validator));
+			let err_str = format!("Initial nomination for validator {} was not stored correctly", validator);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2, err_str);
 		}
 		for validator in 18..=25 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3,
-				format!("Initial nomination for validator {} was not stored correctly", validator));
+			let err_str = format!("Initial nomination for validator {} was not stored correctly", validator);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3, err_str);
 		}
 
 
@@ -276,20 +277,20 @@ fn nominations_for_validators_are_stored() {
 			 (26, 2),(27, 2),(28, 2),(29, 2),(30, 2),(31, 2),(32, 2),(33, 2),(34, 2),(35, 2)]
 		);
 		for validator in 10..=17 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2,
-				format!("Votes for validator {} were not stored correctly after second nomination", validator));
+			let err_str = format!("Votes for validator {} were not stored correctly after second nomination", validator);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2, err_str);
 		}
 		for validator in 18..=19 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3,
-				format!("Votes for validator {} were not stored correctly after second nomination", validator));
+			let err_str = format!("Votes for validator {} were not stored correctly after second nomination", validator);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3, err_str);
 		}
 		for validator in 20..=25 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5,
-				format!("Votes for validator {} were not stored correctly after second nomination", validator));
+			let err_str = format!("Votes for validator {} were not stored correctly after second nomination", validator);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5, err_str);
 		}
 		for validator in 26..=35 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5,
-				format!("Votes for validator {} were not stored correctly after second nomination", validator));
+			let err_str = format!("Votes for validator {} were not stored correctly after second nomination", validator);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5, err_str);
 		}
 	});	
 }
@@ -314,9 +315,9 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 
 		// Assert: Account 1 tokens are locked and the number of locked tokens is recorded in storage
 		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user1_account_id), initial_1 - committed_1, 
-			"Number of tokens locked is correct for user 1");	
+			"Number of tokens locked is not correct for user 1");	
 		assert_eq!(LiquidStakingModule::nomination_locks_for(&user1_account_id).unwrap(), committed_1,
-			"Number of locked tokens is stored correctly for user 1");
+			"Number of locked tokens is not stored correctly for user 1");
 
 		// Act: Account 2 submits nominations
 		let nominations_2 = [(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
@@ -326,9 +327,9 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 
 		// Assert: Account 2 tokens are locked and the number of locked tokens is recorded in storage
 		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user2_account_id), initial_2 - committed_2, 
-			"Number of tokens locked is correct for user 2");	
+			"Number of tokens locked is not correct for user 2");	
 		assert_eq!(LiquidStakingModule::nomination_locks_for(&user2_account_id).unwrap(), committed_2,
-			"Number of locked tokens is stored correctly for user 2");
+			"Number of locked tokens is not stored correctly for user 2");
 
 		// Act: Account 1 submits more nominations
 		let nominations_3 = [(10, 1),(11, 1),(12, 1),(13, 1),(14, 1),(15, 1),(16, 1),(17, 1),
@@ -338,9 +339,9 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 
 		// Assert: More Account 1 tokens are locked and the total number of locked tokens is recorded in storage
 		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user1_account_id), initial_1 - (committed_1 + committed_3), 
-			"Number of tokens locked is correct for user 1");	
-		assert_eq!(LiquidStakingModule::NominationLocksStorage::get(&user1_account_id).unwrap(), committed_1 + committed_3,
-			"Number of locked tokens is stored correctly for user 1");
+			"Number of tokens locked is not correct for user 1");	
+		assert_eq!(LiquidStakingModule::nomination_locks_for(&user1_account_id).unwrap(), committed_1 + committed_3,
+			"Number of locked tokens is not stored correctly for user 1");
 	});	
 }
 
