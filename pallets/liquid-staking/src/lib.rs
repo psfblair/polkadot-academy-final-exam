@@ -41,7 +41,6 @@ pub mod pallet {
 
 		type MainCurrency: LockableCurrency<AccountIdOf<Self>>;
 		type DerivativeCurrency: LockableCurrency<AccountIdOf<Self>, Balance = BalanceTypeOf<Self>>;
-		type StakingInterface: sp_staking::StakingInterface;
        
         #[pallet::constant]
 		type PalletId: Get<PalletId>;
@@ -49,6 +48,11 @@ pub mod pallet {
 		type PalletId2: Get<PalletId>;
 		#[pallet::constant]
 		type MinimumStake: Get<BalanceTypeOf<Self>>;
+
+		type StakingInterface: sp_staking::StakingInterface<
+			Balance = BalanceTypeOf<Self>,
+			AccountId = AccountIdOf<Self>,
+		>;
 	}
 
 	#[pallet::pallet]
