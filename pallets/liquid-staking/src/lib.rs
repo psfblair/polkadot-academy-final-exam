@@ -39,8 +39,8 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-		type MainCurrency: LockableCurrency<Self::AccountId>;
-		type DerivativeCurrency: LockableCurrency<Self::AccountId, Balance = BalanceTypeOf<Self>>;
+		type MainCurrency: LockableCurrency<AccountIdOf<Self>>;
+		type DerivativeCurrency: LockableCurrency<AccountIdOf<Self>, Balance = BalanceTypeOf<Self>>;
 		type StakingInterface: sp_staking::StakingInterface;
        
         #[pallet::constant]
@@ -68,17 +68,17 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// An account has staked a certain amount of the staking token with the pallet [account, amount]
-		StakeAdded(T::AccountId, BalanceTypeOf<T>),
+		StakeAdded(AccountIdOf<T>::, BalanceTypeOf<T>),
 
 		/// The pot account was unable to bond some free funds [account, error]
-		BondingFailed(T::AccountId, DispatchError),
+		BondingFailed(AccountIdOf<T>, DispatchError),
 
 		/// An account has redeemed a certain amount of the liquid token with the pallet [account, amount]
-		DerivativeRedeemed(T::AccountId, BalanceTypeOf<T>),
+		DerivativeRedeemed(AccountIdOf<T>, BalanceTypeOf<T>),
 		
 		/// The staking tokens associated with the redeemed liquid tokens have been unbonded and 
 		/// credited to the staker [account, amount]
-		StakeReleased(T::AccountId, BalanceTypeOf<T>, BalanceTypeOf<T>),
+		StakeReleased(AccountIdOf<T>, BalanceTypeOf<T>, BalanceTypeOf<T>),
 		
 		// ValidatorVoteSubmitted,
 		// ReferendumVoteSubmitted,
@@ -98,12 +98,12 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
-		pub fn controller_account_id() -> T::AccountId {
+		pub fn controller_account_id() -> AccountIdOf<T> {
 			T::PalletId::get().into_account_truncating()
 		}
 		// Into_sub_account_truncating does not result in distinct account IDs for the two
 		// accounts, so to save much more involved coding we are just using 2 pallet IDs.
-		pub fn stash_account_id() -> T::AccountId {
+		pub fn stash_account_id() -> AccountIdOf<T> {
 			T::PalletId2::get().into_account_truncating()
 		}
 
