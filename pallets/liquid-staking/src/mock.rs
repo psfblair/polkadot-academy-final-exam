@@ -1,6 +1,7 @@
 use crate as pallet_liquid_staking;
 use frame_support::{
 	traits::{ConstU16, ConstU64, StorageMapShim,},
+	storage::bounded_btree_map::BoundedBTreeMap,
 	PalletId, parameter_types,
 };
 use sp_core::H256;
@@ -10,6 +11,7 @@ use sp_runtime::{
 	BuildStorage,
 };
 use sp_staking::{EraIndex, StakingInterface};
+use sp_std::collections::btree_map::BTreeMap;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;

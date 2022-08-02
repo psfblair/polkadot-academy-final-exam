@@ -3,7 +3,6 @@ use crate::{
     Event, Error,
 };
 use frame_support::{
-	storage::bounded_btree_map::BoundedBTreeMap
 	traits::{Currency, LockableCurrency, WithdrawReasons},
 	assert_noop, assert_ok
 };
