@@ -28,7 +28,7 @@ pub mod pallet {
             }
         };
     use frame_support::sp_runtime::{
-            traits::{AccountIdConversion, CheckedMul, CheckedDiv, Zero}
+            traits::{AccountIdConversion, CheckedAdd, CheckedMul, CheckedDiv, Zero}
         };
 	use sp_staking::{StakingInterface, EraIndex};
 	use crate::{AccountIdOf, BalanceTypeOf};
