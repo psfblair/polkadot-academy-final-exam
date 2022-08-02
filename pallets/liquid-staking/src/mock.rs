@@ -93,7 +93,7 @@ parameter_types! {
 
 pub struct StakingMock;
 impl StakingMock {
-	pub(crate) fn set_bonded_balance(who: AccountId, bonded: Balance) {
+	pub(crate) fn set_bonded_balance(who: AccountId, bonded: BalanceImpl) {
 		let mut x = BondedBalanceMap::get();
 		x.insert(who, bonded);
 		BondedBalanceMap::set(&x)
