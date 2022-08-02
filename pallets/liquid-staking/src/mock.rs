@@ -1,9 +1,7 @@
 use crate as pallet_liquid_staking;
 use frame_support::{
 	pallet_prelude::*,
-	traits::{ConstU16, ConstU64, StorageMapShim,
-		tokens::Balance,
-	},
+	traits::{ConstU16, ConstU64, StorageMapShim,},
 	PalletId, parameter_types,
 };
 use sp_core::H256;
