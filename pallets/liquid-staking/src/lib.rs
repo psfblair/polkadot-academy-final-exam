@@ -41,6 +41,7 @@ pub mod pallet {
 
 		type MainCurrency: LockableCurrency<AccountIdOf<Self>>;
 		type DerivativeCurrency: LockableCurrency<AccountIdOf<Self>, Balance = BalanceTypeOf<Self>>;
+		type TransactionId: Hash;
        
         #[pallet::constant]
 		type PalletId: Get<PalletId>;
@@ -72,8 +73,9 @@ pub mod pallet {
 		/// The pot account was unable to bond some free funds [account, error]
 		BondingFailed(AccountIdOf<T>, DispatchError),
 
-		/// An account has redeemed a certain amount of the liquid token with the pallet [account, amount]
-		DerivativeRedeemed(AccountIdOf<T>, BalanceTypeOf<T>),
+		/// An account has redeemed a certain amount of the derivative token with the pallet. The underlying 
+		/// main token may be claimed on the era specified in the event. [account, amount, era, transaction_id]
+		DerivativeRedeemed(AccountIdOf<T>, BalanceTypeOf<T>, EraIndex, TransactionId),
 		
 		/// The staking tokens associated with the redeemed liquid tokens have been unbonded and 
 		/// credited to the staker [account, amount]
@@ -129,8 +131,11 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		
-		/// TODO Add documentation!!!
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		/// Submit an amount of the main token to be staked, resulting in a credit of a 
+		/// certain amount of the derivative token to the staker's account. This amount
+		/// is minted and is calculated using the ratio of the total issuance of the derivative
+		/// token to the total amount currently in the pallet's stash account (the pooled stake).
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))] // TODO Benchmark eventually
 		pub fn add_stake(origin: OriginFor<T>, amount: BalanceTypeOf<T>) -> DispatchResult {
 			// Ensure signature
 			let who = ensure_signed(origin)?;
@@ -171,5 +176,23 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		/// Submit an amount of the derivative token to redeem for the main token. The derivative
+		/// token is immediately burned; the amount redeemed is recorded in storage along with the
+		/// era the underlying funds will be available, and keyed by a transaction ID that can be
+		/// used by the staker to retrieve the funds as of that era. The DerivativeRedeemed
+		/// event indicates the era when the active bonded balance can be withdrawn and the 
+		/// transaction ID that can be used to withdraw it.
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))] // TODO Benchmark eventually
+		pub fn redeem_stake(origin: OriginFor<T>, amount: BalanceTypeOf<T>) -> DispatchResult {
+
+		}
+
+		/// TODO Add documentation!!!
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))] // TODO Benchmark eventually
+		pub fn withdraw_stake(origin: OriginFor<T>, amount: BalanceTypeOf<T>) -> DispatchResult {
+
+		}
+
 	}
 }

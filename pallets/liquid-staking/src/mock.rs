@@ -48,6 +48,7 @@ impl crate::pallet::Config for Test {
 	type MinimumStake = MinimumStakeImpl;
 	type MainCurrency = MainBalances;
 	type DerivativeCurrency = DerivativeBalances;
+	type TransactionId = frame_system::Config::Hash;
 	type StakingInterface = StakingMock;
 }
 

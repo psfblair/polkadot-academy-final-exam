@@ -26,6 +26,7 @@ fn test_genesis_balances() {
 	});
 }
 
+/////////////////////////////////////// ADD STAKE TESTS ////////////////////////////////////////////
 #[test]
 fn add_stake_transfers_dot() {
 	let user_account_id = 1;
@@ -163,7 +164,7 @@ fn add_stake_bonds_with_all_free_funds_available() {
 	});
 }
 
-// add_stake failure scenarios:
+/////////////////////////////////////// ADD STAKE FAILURE SCENARIO TESTS ////////////////////////////////////////////
 
 #[test]
 fn add_stake_fails_with_insufficient_balance() {
@@ -214,6 +215,8 @@ fn add_stake_fails_when_max_stake_exceeded() {
 		);
 	});
 }
+
+/////////////////////////////////////// VALIDATOR VOTE TESTS ////////////////////////////////////////////
 
 fn controller_account_id() -> u64 {
 	LiquidStakingModule::controller_account_id()
