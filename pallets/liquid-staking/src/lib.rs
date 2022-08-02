@@ -64,7 +64,7 @@ pub mod pallet {
 	/// TWOX-QUESTION: `AccountId`s are crypto hashes anyway, so is this safe? What if an attacker knew a user's account ID and
 	/// wanted to change their votes?  
 	#[pallet::storage]
-	#[pallet::getter(fn nomination_locks)]
+	#[pallet::getter(fn nomination_locks_for)]
 	pub type NominationLocksStorage<T> = StorageMap<_, Twox64Concat, AccountIdOf<T>, BalanceTypeOf<T>>;
 
 	/// The votes 
@@ -72,7 +72,7 @@ pub mod pallet {
 	/// TWOX-QUESTION: `AccountId`s are crypto hashes anyway, so is this safe? Aren't the IDs of validators generally known, and
 	/// if so would this be liable to being attacked by those who know those IDs?
 	#[pallet::storage]
-	#[pallet::getter(fn nominations)]
+	#[pallet::getter(fn nomination_votes_for)]
 	pub type NominationsStorage<T> = StorageMap<_, Twox64Concat, AccountIdOf<T>, BalanceTypeOf<T>>;
 
 	#[pallet::event]

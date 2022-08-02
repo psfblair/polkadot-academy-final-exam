@@ -254,8 +254,15 @@ fn nominations_for_validators_are_stored() {
 
 		// Assert: Account 1 nominations are recorded
 		let first_nomination_map = std::collections::HashMap::from(nominations_1);
-		assert_eq!(LiquidStakingModule::NominationsStorage::get(&user1_account_id).unwrap(), first_nomination_map,
-			"Initial nominations are stored correctly");
+		for validator in 10..=17 {
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2,
+				format!("Initial nomination for validator {} was not stored correctly", validator));
+		}
+		for validator in 18..=25 {
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3,
+				format!("Initial nomination for validator {} was not stored correctly", validator));
+		}
+
 
 		// Act: Account 2 submits nominations
 		let nominations_2 = [(20, 2),(21, 2),(22, 2),(23, 2),(24, 2),(25, 2),(26, 2),(27, 2),
@@ -268,8 +275,22 @@ fn nominations_for_validators_are_stored() {
 			 (18, 3),(19, 3),(20, 5),(21, 5),(22, 5),(23, 5),(24, 5),(25, 5),
 			 (26, 2),(27, 2),(28, 2),(29, 2),(30, 2),(31, 2),(32, 2),(33, 2),(34, 2),(35, 2)]
 		);
-		assert_eq!(LiquidStakingModule::NominationsStorage::get(&user2_account_id).unwrap(), second_nomination_map,
-			"Subsequent nominations are stored correctly");
+		for validator in 10..=17 {
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2,
+				format!("Votes for validator {} were not stored correctly after second nomination", validator));
+		}
+		for validator in 18..=19 {
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 3,
+				format!("Votes for validator {} were not stored correctly after second nomination", validator));
+		}
+		for validator in 20..=25 {
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5,
+				format!("Votes for validator {} were not stored correctly after second nomination", validator));
+		}
+		for validator in 26..=35 {
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5,
+				format!("Votes for validator {} were not stored correctly after second nomination", validator));
+		}
 	});	
 }
 
@@ -294,7 +315,7 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 		// Assert: Account 1 tokens are locked and the number of locked tokens is recorded in storage
 		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user1_account_id), initial_1 - committed_1, 
 			"Number of tokens locked is correct for user 1");	
-		assert_eq!(LiquidStakingModule::NominationLocksStorage::get(&user1_account_id).unwrap(), committed_1,
+		assert_eq!(LiquidStakingModule::nomination_locks_for(&user1_account_id).unwrap(), committed_1,
 			"Number of locked tokens is stored correctly for user 1");
 
 		// Act: Account 2 submits nominations
@@ -306,7 +327,7 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 		// Assert: Account 2 tokens are locked and the number of locked tokens is recorded in storage
 		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user2_account_id), initial_2 - committed_2, 
 			"Number of tokens locked is correct for user 2");	
-		assert_eq!(LiquidStakingModule::NominationLocksStorage::get(&user2_account_id).unwrap(), committed_2,
+		assert_eq!(LiquidStakingModule::nomination_locks_for(&user2_account_id).unwrap(), committed_2,
 			"Number of locked tokens is stored correctly for user 2");
 
 		// Act: Account 1 submits more nominations

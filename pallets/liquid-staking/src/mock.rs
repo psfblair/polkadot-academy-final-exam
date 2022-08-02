@@ -15,8 +15,11 @@ use sp_std::collections::btree_map::BTreeMap;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
+
+// Yes, I know this is a Java naming convention, and one that even Java people hate. 
+// But it works well with text search to keep the names distinct.
 type BalanceImpl = u128;
-pub type AccountIdImpl = u64;
+type AccountIdImpl = u64;
 
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
