@@ -161,7 +161,7 @@ pub mod pallet {
 			// funds the next time new funds come in. Or if we need to be more vigorous, then we could
 			// implement bonding of free funds in on_initialize, but doing that once every six seconds
 			// seems expensive unless our liquid staking offering is extremely active.
-			let not_yet_bonded = T::MainCurrency::free_balance(&pot);
+			let not_yet_bonded: frame_support::traits::tokens::Balance; = T::MainCurrency::free_balance(&pot);
 			match T::StakingInterface::bond_extra(Origin::Signed(&pot), not_yet_bonded) {
 				// An unorthodox use of an event to signal an error condition. We don't want to fail the transaction
 				// if we fail to bond at this point, but we do want some indication out in the world that bonding failed.
