@@ -23,7 +23,7 @@ pub mod pallet {
             PalletId,
             pallet_prelude::*,
             traits::{
-                Currency, LockableCurrency, WithdrawReasons,
+                Currency, LockableCurrency, WithdrawReasons, LockIdentifier,
                 tokens::ExistenceRequirement,
             }
         };
@@ -229,7 +229,7 @@ pub mod pallet {
 			// TODO Determine if the submission is voting for accounts that are not actually nominatable.
 
 			// Determine whether the submission has enough tokens in their free balance to match the tokens voted. If not, reject.
-            let total_voted = nominations.iter().fold(Zero::zero(), |accum, (_, votes)| accum.checked_add(votes))?; 
+            let total_voted = nominations.iter().fold(Zero::zero(), |accum: BalanceTypeOf<T>, (_, votes)| accum.checked_add(votes))?; 
 
 			// Lock that quantity of derivative token in the origin's account
 			T::DerivativeCurrency::set_lock(NOMINATION_LOCK_ID, &who, total_voted, WithdrawReasons::RESERVE);
