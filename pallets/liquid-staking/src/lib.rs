@@ -12,9 +12,10 @@ mod tests;
 mod benchmarking;
 
 use frame_support::traits::Currency; 
-pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
+pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId + sp_staking::StakingInterface::AccountId;
 // This type will be used for both balances pallets; they are tied together below in Config.
-pub type BalanceTypeOf<T> = <<T as Config>::MainCurrency as Currency<AccountIdOf<T>>>::Balance; 
+pub type BalanceTypeOf<T> = 
+	<<T as Config>::MainCurrency as Currency<AccountIdOf<T>>>::Balance + sp_staking::StakingInterface::Balance; 
 
 #[frame_support::pallet]
 pub mod pallet {
