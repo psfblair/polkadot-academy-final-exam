@@ -123,6 +123,24 @@ fn add_stake_mints_sdot_for_later_staker_after_slash() {
 }
 
 #[test]
+fn add_stake_bonds_the_pot_if_not_yet_bonded() {
+	let user_account_id = 1;
+	let initial_balances = vec![
+		(user_account_id, 10, 0),
+		(stash_account_id(), 0, 0),
+		(controller_account_id(), 0, 0),
+	];
+	// Arrange: Whatever account balances
+	new_test_ext(initial_balances).execute_with(|| {
+		// Act: Account 1 stakes 4 DOT
+		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 4));
+
+		// Assert: Pot is bonded for 4 DOT
+		assert_eq!(StakingMock::active_stake(&stash_account_id), Some(4), "pot bonded staked amount is as expected");
+	});	
+}
+
+#[test]
 fn add_stake_deposits_stake_added_event() {
 	let user_account_id = 1;
 	let initial_balances = vec![
