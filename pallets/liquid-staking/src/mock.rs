@@ -37,8 +37,8 @@ parameter_types! {
 	// in distinct account IDs for the two accounts, so something more involved would be needed.
 	pub const PalletIdImpl: PalletId = PalletId(*b"px/lstkg");
 	pub const PalletIdImpl2: PalletId = PalletId(*b"py/lstkg");
-	pub const MinimumStakeImpl: crate::BalanceTypeOf<Test> = 2;
-	pub static ExistentialDepositImpl: crate::BalanceTypeOf<Test> = 0;
+	pub const MinimumStakeImpl: BalanceImpl = 2;
+	pub static ExistentialDepositImpl: BalanceImpl = 0;
 }
 
 impl crate::pallet::Config for Test {
@@ -73,7 +73,7 @@ impl pallet_balances::Config<DerivativeToken> for Test {
 	type Event = Event;
 	type DustRemoval = ();
 	type ExistentialDeposit = ExistentialDepositImpl;
-	type AccountStore = StorageMapShim<pallet_balances::pallet::Account<Test, DerivativeToken>, frame_system::Provider<Test>, crate::AccountIdOf<Test>, pallet_balances::AccountData<crate::BalanceTypeOf<Test>>>;
+	type AccountStore = StorageMapShim<pallet_balances::pallet::Account<Test, DerivativeToken>, frame_system::Provider<Test>, AccountIdImpl, pallet_balances::AccountData<BalanceImpl>>;
 	type WeightInfo = ();
 }
 
@@ -81,16 +81,16 @@ impl pallet_balances::Config<DerivativeToken> for Test {
 parameter_types! {
 	pub static CurrentEra: EraIndex = 0;
 	pub static BondingDuration: EraIndex = 3;
-	pub storage BondedBalanceMap: BTreeMap<crate::AccountIdOf<Test>, crate::BalanceTypeOf<Test>> = Default::default();
-	pub storage UnbondingBalanceMap: BTreeMap<crate::AccountIdOf<Test>, crate::BalanceTypeOf<Test>> = Default::default();
+	pub storage BondedBalanceMap: BTreeMap<AccountIdImpl, BalanceImpl> = Default::default();
+	pub storage UnbondingBalanceMap: BTreeMap<AccountIdImpl, BalanceImpl> = Default::default();
 	#[derive(Clone, PartialEq)]
 	pub static MaxUnbonding: u32 = 8;
-	pub storage Nominations: Option<Vec<crate::AccountIdOf<Test>>> = None;
+	pub storage Nominations: Option<Vec<AccountIdImpl>> = None;
 }
 
 pub struct StakingMock;
 impl StakingMock {
-	pub(crate) fn set_bonded_balance(who: crate::AccountIdOf<Test>, bonded: crate::BalanceTypeOf<Test>) {
+	pub(crate) fn set_bonded_balance(who: AccountIdImpl, bonded: BalanceImpl) {
 		let mut x = BondedBalanceMap::get();
 		x.insert(who, bonded);
 		BondedBalanceMap::set(&x)
@@ -98,8 +98,8 @@ impl StakingMock {
 }
 
 impl StakingInterface for StakingMock {
-	type Balance = crate::BalanceTypeOf<Test>;
-	type AccountId = crate::AccountIdOf<Test>;
+	type Balance = BalanceImpl;
+	type AccountId = AccountIdImpl;
 
 	fn minimum_bond() -> Self::Balance {
 		10
@@ -185,14 +185,14 @@ impl frame_system::Config for Test {
 	type BlockNumber = u64;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
-	type AccountId = crate::AccountIdOf<Test>;
+	type AccountId = AccountIdImpl;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
 	type Event = Event;
 	type BlockHashCount = ConstU64<250>;
 	type Version = ();
 	type PalletInfo = PalletInfo;
-	type AccountData = pallet_balances::AccountData<crate::BalanceTypeOf<Test>>;
+	type AccountData = pallet_balances::AccountData<BalanceImpl>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
