@@ -339,10 +339,21 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 	});	
 }
 
+//////////////////////////////// VALIDATOR VOTE FAILURE SCENARIO TESTS ////////////////////////////////////////////
 
-////////////////////////////////////////////// TODO ////////////////////////////////////////////////////
+#[test]
+fn nominator_vote_is_rejected_after_voting_period_ends() {
+}
 
-// Test the on_runtime_upgrade hook 
+#[test]
+fn nominator_vote_is_rejected_if_votes_exceed_free_balance() {
+}
+
+#[test]
+fn nominator_vote_is_rejected_if_nominees_are_not_candidate_validators() {
+}
+
+
 
 fn controller_account_id() -> u64 {
 	LiquidStakingModule::controller_account_id()

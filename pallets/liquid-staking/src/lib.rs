@@ -48,6 +48,8 @@ pub mod pallet {
 		type PalletId2: Get<PalletId>;
 		#[pallet::constant]
 		type MinimumStake: Get<BalanceTypeOf<Self>>;
+		#[pallet::constant]
+		type MaxValidatorNominees: Get<u8>; // Maybe this is like the 640k thing but I think voting for more than 255 validators would be ridiculous
 
 		type StakingInterface: sp_staking::StakingInterface<
 			Balance = BalanceTypeOf<Self>,
@@ -217,16 +219,34 @@ pub mod pallet {
 		// derivative token, the nominations of the previous era remain unchanged. Otherwise, the pallet
 		// selects the sixteen top vote-getters and nominates them.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))] // TODO Benchmark eventually
-		pub fn nominate(origin: OriginFor<T>, nominations: [(AccountIdOf<T>, BalanceTypeOf<T>); 16]) -> DispatchResult {
-			// Ensure signature
+		pub fn nominate(origin: OriginFor<T>, 
+						nominations: BoundedVec<(AccountIdOf<T>, BalanceTypeOf<T>), T::MaxValidatorNominees>) -> DispatchResult {
+			// Ensure signature     
 			let who = ensure_signed(origin)?;
 
 			// Determine if we are within n blocks of the beginning of an era, else reject 
 			// Determine whether the submission has enough tokens in their free balance to match the tokens voted. If not, reject.
-			// TODO Determine if the submission is voting for accounts that are not actually nominatable.
+			// Determine if the submission is voting for accounts that are not actually nominatable.
+
 			// Lock that quantity of derivative token in the origin's account
+			T::DerivativeCurrency::set_lock(PalletId2.get(), &who, total_voted, WithdrawReasons::RESERVE);
+
 			// Store the account and the number of tokens locked for that account (add to the total)
+			NominationLocksStorage<T>::try_mutate(who, |maybe_value| {
+				match maybe_value {
+					Some(prior_amount) => *maybe_value = Some(prior_amount + total_voted),
+					None => *maybe_value = Some(total_voted),
+				}
+			})?;
 			// Store the nominations and the amounts (adding to the totals)
+			for (validator, votes) in nominations.iter() {
+				NominationsStorage<T>::try_mutate(validator, |maybe_value| {
+					match maybe_value {
+						Some(prior_amount) => *maybe_value = Some(prior_amount + votes),
+						None => *maybe_value = Some(votes),
+					}
+				})?;		
+			}
             Ok(())
 		}
 	}

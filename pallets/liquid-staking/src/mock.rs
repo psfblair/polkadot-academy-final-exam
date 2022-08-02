@@ -41,6 +41,7 @@ parameter_types! {
 	pub const PalletIdImpl: PalletId = PalletId(*b"px/lstkg");
 	pub const PalletIdImpl2: PalletId = PalletId(*b"py/lstkg");
 	pub const MinimumStakeImpl: BalanceImpl = 2;
+	pub const MaxValidatorNomineesImpl: u8 = 16;
 	pub static ExistentialDepositImpl: BalanceImpl = 0;
 }
 
@@ -49,6 +50,7 @@ impl crate::pallet::Config for Test {
 	type PalletId = PalletIdImpl;
 	type PalletId2 = PalletIdImpl2;
 	type MinimumStake = MinimumStakeImpl;
+	type MaxValidatorNominees = MaxValidatorNomineesImpl;
 	type MainCurrency = MainBalances;
 	type DerivativeCurrency = DerivativeBalances;
 	type TransactionId = <Test as frame_system::Config>::Hash;
