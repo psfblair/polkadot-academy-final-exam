@@ -98,8 +98,8 @@ impl StakingMock {
 }
 
 impl StakingInterface for StakingMock {
-	type Balance = BalanceImpl;
-	type AccountId = AccountIdImpl;
+	type Balance = Test::MainCurrency as Currency<AccountIdOf<T>>>::Balance;
+	type AccountId = frame_system::Config::AccountId;
 
 	fn minimum_bond() -> Self::Balance {
 		10
