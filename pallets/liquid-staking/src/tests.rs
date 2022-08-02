@@ -3,11 +3,12 @@ use crate::{
     Event, Error,
 };
 use frame_support::{
+	storage::bounded_btree_map::BoundedBTreeMap
 	traits::{Currency, LockableCurrency, WithdrawReasons},
 	assert_noop, assert_ok
 };
 use frame_system::pallet::Pallet;
-use sp_std::collections::btree_map::BTreeMap;
+use std::collections::btree_map::BTreeMap;
 
 #[test]
 fn test_genesis_balances() {
@@ -130,6 +131,7 @@ fn add_stake_deposits_stake_added_event() {
 
 #[test]
 fn add_stake_bonds_with_all_free_funds_available() {
+	let user_account_id = 1;
 	let stash_account_id = stash_account_id();
 	let initial_balances = vec![
 		(user_account_id, 10, 0),

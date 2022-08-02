@@ -166,7 +166,7 @@ pub mod pallet {
 				// An unorthodox use of an event to signal an error condition. We don't want to fail the transaction
 				// if we fail to bond at this point, but we do want some indication out in the world that bonding failed.
 				// Success will result in a Bonded event from the staking pallet so we don't need an event for that.
-				err @ Err(_) => Self::deposit_event(Event::BondingFailed(pot, err)),
+				Err(err) => Self::deposit_event(Event::BondingFailed(pot, err)),
 				_ => ()
 			}
 
