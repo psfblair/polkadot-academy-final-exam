@@ -31,7 +31,7 @@ pub mod pallet {
     use frame_support::sp_runtime::{
             traits::{AccountIdConversion, CheckedMul, CheckedDiv,}
         };
-	use sp_staking::StakingInterface;
+	use sp_staking::StakingInterface, EraIndex;
 	
 	use crate::{AccountIdOf, BalanceTypeOf};
 
@@ -41,7 +41,7 @@ pub mod pallet {
 
 		type MainCurrency: LockableCurrency<AccountIdOf<Self>>;
 		type DerivativeCurrency: LockableCurrency<AccountIdOf<Self>, Balance = BalanceTypeOf<Self>>;
-		type TransactionId: Hash;
+		type TransactionId: <Self as frame_system::Config>::Hash;
        
         #[pallet::constant]
 		type PalletId: Get<PalletId>;
