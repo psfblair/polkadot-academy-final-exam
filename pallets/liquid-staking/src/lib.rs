@@ -126,7 +126,7 @@ pub mod pallet {
 	
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn on_initialize(n: T::BlockNumber) -> Weight {
+		fn on_initialize(_n: T::BlockNumber) -> Weight {
 			0
 		}
 	}
@@ -166,7 +166,7 @@ pub mod pallet {
 			// implement bonding of free funds in on_initialize, but doing that once every six seconds
 			// seems expensive unless our liquid staking offering is extremely active.
 			let not_yet_bonded = T::MainCurrency::free_balance(&pot);
-			match T::StakingInterface::bond_extra(pot, not_yet_bonded) { // Confused: Shouldn't this be signed?
+			match T::StakingInterface::bond_extra(pot.clone(), not_yet_bonded) { // Confused: Shouldn't this be signed?
 				// An unorthodox use of an event to signal an error condition. We don't want to fail the transaction
 				// if we fail to bond at this point, but we do want some indication out in the world that bonding failed.
 				// Success will result in a Bonded event from the staking pallet so we don't need an event for that.
