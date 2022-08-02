@@ -65,7 +65,7 @@ pub mod pallet {
 	/// wanted to change their votes?  
 	#[pallet::storage]
 	#[pallet::getter(fn nomination_locks)]
-	pub type NominationLocksStorage<T> = StorageMap<_, Twox64Concat, T::AccountId, BalanceTypeOf<T>>;
+	pub type NominationLocksStorage<T> = StorageMap<_, Twox64Concat, AccountIdOf<T>, BalanceTypeOf<T>>;
 
 	/// The votes 
 	///
@@ -73,7 +73,7 @@ pub mod pallet {
 	/// if so would this be liable to being attacked by those who know those IDs?
 	#[pallet::storage]
 	#[pallet::getter(fn nominations)]
-	pub type NominationsStorage<T> = StorageMap<_, Twox64Concat, T::AccountId, BalanceTypeOf<T>>;
+	pub type NominationsStorage<T> = StorageMap<_, Twox64Concat, AccountIdOf<T>, BalanceTypeOf<T>>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
