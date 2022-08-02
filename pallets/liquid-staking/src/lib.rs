@@ -33,6 +33,8 @@ pub mod pallet {
 	use sp_staking::{StakingInterface, EraIndex};
 	use crate::{AccountIdOf, BalanceTypeOf};
 
+	const NOMINATION_LOCK_ID: LockIdentifier = *b"nomlocks";
+
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
@@ -223,13 +225,14 @@ pub mod pallet {
 			// Ensure signature     
 			let who = ensure_signed(origin)?;
 
-			// Determine if we are within n blocks of the beginning of an era, else reject 
+			// TODO Determine if we are within n blocks of the beginning of an era, else reject 
+			// TODO Determine if the submission is voting for accounts that are not actually nominatable.
+
 			// Determine whether the submission has enough tokens in their free balance to match the tokens voted. If not, reject.
             let total_voted = nominations.iter().fold(Zero::zero(), |accum, (_, votes)| accum.checked_add(votes))?; 
-			// Determine if the submission is voting for accounts that are not actually nominatable.
 
 			// Lock that quantity of derivative token in the origin's account
-			T::DerivativeCurrency::set_lock(T::PalletId2::get().into(), &who, total_voted, WithdrawReasons::RESERVE);
+			T::DerivativeCurrency::set_lock(NOMINATION_LOCK_ID, &who, total_voted, WithdrawReasons::RESERVE);
 
 			// Store the account and the number of tokens locked for that account (add to the total)
 			NominationLocksStorage::<T>::try_mutate(who, |maybe_value| {

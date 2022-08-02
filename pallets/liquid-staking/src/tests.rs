@@ -249,8 +249,8 @@ fn nominations_for_validators_are_stored() {
 	// Arrange: Users 1 and 2 both have derivative tokens
 	new_test_ext(initial_balances).execute_with(|| {
 		// Act: Account 1 submits nominations
-		let nominations_1 = [(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
-							 (18, 3),(19, 3),(20, 3),(21, 3),(22, 3),(23, 3),(24, 3),(25, 3)];
+		let nominations_1 = vec![(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
+							 	 (18, 3),(19, 3),(20, 3),(21, 3),(22, 3),(23, 3),(24, 3),(25, 3)];
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user1_account_id), nominations_1));
 
 		// Assert: Account 1 nominations are recorded
@@ -264,8 +264,8 @@ fn nominations_for_validators_are_stored() {
 
 
 		// Act: Account 2 submits nominations
-		let nominations_2 = [(20, 2),(21, 2),(22, 2),(23, 2),(24, 2),(25, 2),(26, 2),(27, 2),
-							 (28, 2),(29, 2),(30, 2),(31, 2),(32, 2),(33, 2),(34, 2),(35, 2)];
+		let nominations_2 = vec![(20, 2),(21, 2),(22, 2),(23, 2),(24, 2),(25, 2),(26, 2),(27, 2),
+							 	 (28, 2),(29, 2),(30, 2),(31, 2),(32, 2),(33, 2),(34, 2),(35, 2)];
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user2_account_id), nominations_2));
 
 		// Assert: Account 2 nominations are recorded and storage reflects everything
@@ -302,8 +302,8 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 	// Arrange: Users 1 and 2 both have derivative tokens
 	new_test_ext(initial_balances).execute_with(|| {
 		// Act: Account 1 submits some nominations, but not their entire amount
-		let nominations_1 = [(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
-							 (18, 3),(19, 3),(20, 3),(21, 3),(22, 3),(23, 3),(24, 3),(25, 3)];
+		let nominations_1 = vec![(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
+							 	 (18, 3),(19, 3),(20, 3),(21, 3),(22, 3),(23, 3),(24, 3),(25, 3)];
 		let committed_1 = 40;
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user1_account_id), nominations_1));
 
@@ -314,8 +314,8 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 			"Number of locked tokens is not stored correctly for user 1");
 
 		// Act: Account 2 submits nominations
-		let nominations_2 = [(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
-							 (18, 2),(19, 2),(20, 2),(21, 2),(22, 2),(23, 2),(24, 2),(25, 2)];
+		let nominations_2 = vec![(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
+							  	 (18, 2),(19, 2),(20, 2),(21, 2),(22, 2),(23, 2),(24, 2),(25, 2)];
 		let committed_2 = 32;
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user2_account_id), nominations_2));
 
@@ -326,8 +326,8 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 			"Number of locked tokens is not stored correctly for user 2");
 
 		// Act: Account 1 submits more nominations
-		let nominations_3 = [(10, 1),(11, 1),(12, 1),(13, 1),(14, 1),(15, 1),(16, 1),(17, 1),
-							 (18, 0),(19, 0),(20, 0),(21, 0),(22, 0),(23, 0),(24, 0),(25, 0)];
+		let nominations_3 = vec![(10, 1),(11, 1),(12, 1),(13, 1),(14, 1),(15, 1),(16, 1),(17, 1),
+							 	 (18, 0),(19, 0),(20, 0),(21, 0),(22, 0),(23, 0),(24, 0),(25, 0)];
 		let committed_3 = 8;
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user1_account_id), nominations_3));
 
