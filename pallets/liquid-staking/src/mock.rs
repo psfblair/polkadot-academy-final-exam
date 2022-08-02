@@ -8,7 +8,7 @@ use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup, Zero},
-	BuildStorage,
+	BuildStorage, DispatchError
 };
 use sp_staking::{EraIndex, StakingInterface};
 use sp_std::collections::btree_map::BTreeMap;
@@ -134,7 +134,7 @@ impl StakingInterface for StakingMock {
 
 	fn bond_extra(who: Self::AccountId, extra: Self::Balance) -> DispatchResult {
 		let mut x = BondedBalanceMap::get();
-		let stash_amount = x.get_mut(&who).ok_or(Error::<T>::NotStash)?;
+		let stash_amount = x.get_mut(&who).ok_or(Other("This would be a NotStash error in the staking pallet"))?;
 		stash_amount.map(|v| *stash_amount += extra);
 		BondedBalanceMap::set(&x);
 		Ok(())
