@@ -249,10 +249,9 @@ fn nominations_for_validators_are_stored() {
 	// Arrange: Users 1 and 2 both have derivative tokens
 	new_test_ext(initial_balances).execute_with(|| {
 		// Act: Account 1 submits nominations
-		let nominations_1 = BoundedVec::try_from(
-								vec![(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
-							 	 	 (18, 3),(19, 3),(20, 3),(21, 3),(22, 3),(23, 3),(24, 3),(25, 3)]).unwrap();
-		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user1_account_id), nominations_1));
+		let nominations_1 = vec![(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
+								 (18, 3),(19, 3),(20, 3),(21, 3),(22, 3),(23, 3),(24, 3),(25, 3)];
+		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user1_account_id), BoundedVec::try_from(nominations_1).unwrap()));
 
 		// Assert: Account 1 nominations are recorded
 		let first_nomination_map = std::collections::HashMap::from(nominations_1);
@@ -265,10 +264,9 @@ fn nominations_for_validators_are_stored() {
 
 
 		// Act: Account 2 submits nominations
-		let nominations_2 = BoundedVec::try_from(
-								vec![(20, 2),(21, 2),(22, 2),(23, 2),(24, 2),(25, 2),(26, 2),(27, 2),
-							 	 	 (28, 2),(29, 2),(30, 2),(31, 2),(32, 2),(33, 2),(34, 2),(35, 2)]).unwrap();
-		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user2_account_id), nominations_2));
+		let nominations_2 = vec![(20, 2),(21, 2),(22, 2),(23, 2),(24, 2),(25, 2),(26, 2),(27, 2),
+								 (28, 2),(29, 2),(30, 2),(31, 2),(32, 2),(33, 2),(34, 2),(35, 2)];
+		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user2_account_id), BoundedVec::try_from(nominations_2).unwrap()));
 
 		// Assert: Account 2 nominations are recorded and storage reflects everything
 		let second_nomination_map = std::collections::HashMap::from(
