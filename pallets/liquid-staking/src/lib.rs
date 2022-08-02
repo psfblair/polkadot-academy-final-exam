@@ -12,10 +12,9 @@ mod tests;
 mod benchmarking;
 
 use frame_support::traits::Currency; 
-pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId + sp_staking::StakingInterface::AccountId;
+pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 // This type will be used for both balances pallets; they are tied together below in Config.
-pub type BalanceTypeOf<T> = 
-	<<T as Config>::MainCurrency as Currency<AccountIdOf<T>>>::Balance + sp_staking::StakingInterface::Balance; 
+pub type BalanceTypeOf<T> = <<T as Config>::MainCurrency as Currency<AccountIdOf<T>>>::Balance; 
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -163,7 +162,7 @@ pub mod pallet {
 			// implement bonding of free funds in on_initialize, but doing that once every six seconds
 			// seems expensive unless our liquid staking offering is extremely active.
 			let not_yet_bonded = T::MainCurrency::free_balance(&pot);
-			match T::StakingInterface::bond_extra(pot, not_yet_bonded) { // Confused: Shouldn't this be signed?
+			match T::StakingInterface::bond_extra(pot.into(), not_yet_bonded.into()) { // Confused: Shouldn't this be signed?
 				// An unorthodox use of an event to signal an error condition. We don't want to fail the transaction
 				// if we fail to bond at this point, but we do want some indication out in the world that bonding failed.
 				// Success will result in a Bonded event from the staking pallet so we don't need an event for that.
