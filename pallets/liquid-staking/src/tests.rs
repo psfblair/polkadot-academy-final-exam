@@ -3,7 +3,7 @@ use crate::{
     Event, Error,
 };
 use frame_support::{
-	traits::{Currency, LockableCurrency, WithdrawReasons},
+	traits::{Hooks, Currency, LockableCurrency, WithdrawReasons},
 	BoundedVec, assert_noop, assert_ok
 };
 use frame_system::pallet::Pallet;
@@ -413,7 +413,7 @@ fn on_runtime_upgrade_sets_era_if_not_set() {
 			"Era of previous block should not be set at inception");
 
 		// Act
-		System::on_runtime_upgrade();
+		crate::mock::System::on_runtime_upgrade();
 
 		// Assert that the era is set to 2, which is the current era given in the parameter
 		// types for the staking mock.
