@@ -255,12 +255,12 @@ pub mod pallet {
 			NominationLocksStorage::<T>::try_mutate(who, |maybe_existing_value| {
 				match maybe_existing_value {
 					Some(prior_amount) => {
-						match prior_amount.checked_add(total_voted) {
+						match prior_amount.checked_add(&total_voted) {
 							maybe_total @ Some(total) => { 
 								*maybe_existing_value = maybe_total; 
 								Ok(())
 							 },
-							 None => Error::<T>::VoteQuantityInvalid,
+							 None => Err(Error::<T>::VoteQuantityInvalid),
 						}
 					}
 					None => {
@@ -275,12 +275,12 @@ pub mod pallet {
 				NominationsStorage::<T>::try_mutate(validator, |maybe_existing_value| {
 					match maybe_existing_value {
 						Some(prior_amount) => {
-							match prior_amount.checked_add(votes) {
+							match prior_amount.checked_add(&votes) {
 								maybe_total @ Some(total) => { 
 									*maybe_existing_value = maybe_total; 
 									Ok(())
 								},
-								None => Error::<T>::ValidatorVoteQuantityInvalid,
+								None => Err(Error::<T>::ValidatorVoteQuantityInvalid),
 							}
 						},
 						None => {
