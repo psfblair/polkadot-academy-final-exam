@@ -285,7 +285,7 @@ fn nominations_for_validators_are_stored() {
 			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5);
 		}
 		for validator in 26..=35 {
-			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 5);
+			assert_eq!(LiquidStakingModule::nomination_votes_for(validator).unwrap(), 2);
 		}
 	});	
 }
