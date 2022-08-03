@@ -300,7 +300,7 @@ pub mod pallet {
 						}
 					}
 					None => {
-						let new_map = BoundedBTreeMap::<EraIndex, BalanceTypeOf<T>, T::WithdrawalBound>::new();
+						let mut new_map = BoundedBTreeMap::<EraIndex, BalanceTypeOf<T>, T::WithdrawalBound>::new();
 						new_map.try_insert(era_available, amount).map(
 							// We know the key isn't actually already there because we just created the map. qed 
 							|_| RedemptionsAwaitingWithdrawal::<T>::insert(who, new_map),
