@@ -419,7 +419,7 @@ fn on_runtime_upgrade_sets_era_if_not_set() {
 		// types for the staking mock.
 		assert_eq!(LiquidStakingModule::era_of_previous_block(), Some(2), 
 			"Era of previous block should be set properly after runtime upgrade");
-	}
+	});
 }	
 
 fn controller_account_id() -> u64 {
