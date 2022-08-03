@@ -82,12 +82,13 @@ pub mod pallet {
 	#[pallet::getter(fn era_start_block)]
 	pub type EraStartBlockNumber<T> = StorageValue<_, BlockNumberFor<T>>;
 
-	/// The number of derivative tokens that a stakeholder has redeemed, paired with the era when the stakeholder
-	/// can withdraw the corresponding main token from the stash account. Since one account can redeem tokens multiple
-	/// times, the value is a vector of such pairs. There is potentially a way for this vector to grow large if a 
-	/// stakeholder redeems tokens and then does not withdraw the funds, over a long period of time. We will collapse
-	/// the data by making it instead a map of maps: account_id -> era -> amount  . Besides the economic disincentive
-	/// that failing to withdraw one's tokens makes spamming the system expensive, we can also institute a BoundedBTreeMap
+	/// For each account, a BoundedBTreeMap of era to amount, where the amount is the number of derivative tokens 
+	/// that a stakeholder has redeemed, and the era is the data when the staker can withdraw the corresponding 
+	/// main token from the stash account. Using a map as the value allows the account to make partial redemptions
+	/// at different times rather than redeeming all held derivative tokens at once. There is potentially a way for 
+	/// this map to grow large if a staker redeems tokens and then does not withdraw the funds, over a long period of 
+	/// time. We collapse the data by making it a map of maps: account_id -> era -> amount  . Besides the economic 
+	/// disincentive that failing to withdraw one's tokens makes spamming the system expensive, we institute a BoundedBTreeMap
 	/// such that if a stakeholder is waiting to withdraw tokens for more than a configurable number of eras, those entries
 	/// fall out of the map and redemption can no longer occur.
 	///
@@ -316,7 +317,7 @@ pub mod pallet {
 			// Burn the derivative currency submitted
 			// This cannot fail, so we don't care about the return value.
 			let _ = T::DerivativeCurrency::slash(&who, amount);
-			
+
 			// Emit a DerivativeRedeemed event.
 			Self::deposit_event(Event::DerivativeRedeemed(who, amount, era_available));
 
