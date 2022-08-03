@@ -1,10 +1,10 @@
 use crate::{
-        mock::{new_test_ext, LiquidStakingModule, MainBalances, DerivativeBalances, Origin, Test, System, StakingMock,}, 
-    Event, Error, 
+        mock::{new_test_ext, LiquidStakingModule, MainBalances, DerivativeBalances, Origin, Test, System, StakingMock, }, 
+    Event, Error, BalanceTypeOf
 };
 use frame_support::{
 	traits::{Currency, OnRuntimeUpgrade},
-	BoundedVec, assert_noop, assert_ok
+	BoundedVec, BoundedBTreeMap, assert_noop, assert_ok
 };
 use frame_system::pallet::Pallet;
 use sp_staking::{StakingInterface, EraIndex};
