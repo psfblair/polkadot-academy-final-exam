@@ -280,7 +280,7 @@ fn redeem_stake_stores_quantity_of_derivative_token_redeemed_along_with_unbondin
 		// Assert Account 1 is due 20 dot at the end of the unbonding period:
 		// Mock sets us in Era 2 with a bonding duration of 3, so we expect to get them back in era 5
 		let expected  = BoundedBTreeMap::<EraIndex, BalanceTypeOf<T>, LiquidStakingModule::WithdrawalBound>::new();
-		expected.try_insert(5, 20);
+		let _ = expected.try_insert(5, 20);
 		assert_eq!(LiquidStakingModule::redemptions_awaiting_withdrawal(user_account_id).unwrap(), expected );
 	});
 }
