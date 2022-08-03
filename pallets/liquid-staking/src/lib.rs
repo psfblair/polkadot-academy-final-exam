@@ -283,7 +283,7 @@ pub mod pallet {
 
 			// Add the amount and the era available to storage.
 			// TODO Refactor this code!
-			RedemptionsAwaitingWithdrawal::<T>::try_mutate(who, |maybe_existing_value| {
+			RedemptionsAwaitingWithdrawal::<T>::try_mutate(&who, |maybe_existing_value| {
 				match maybe_existing_value {
 					Some(existing_map) => {
 						match existing_map.get_mut(&era_available) {
@@ -303,7 +303,7 @@ pub mod pallet {
 						let mut new_map = BoundedBTreeMap::<EraIndex, BalanceTypeOf<T>, T::WithdrawalBound>::new();
 						new_map.try_insert(era_available, amount).map(
 							// We know the key isn't actually already there because we just created the map. qed 
-							|_| RedemptionsAwaitingWithdrawal::<T>::insert(who.clone(), new_map),
+							|_| RedemptionsAwaitingWithdrawal::<T>::insert(&who, new_map),
 						).map_err(
 							// This Err case should never happen because this is a new map. But if it does it means the bounds have 
 							// been exceeded. Seems like unreasonable work to create a new error for this misconfiguration case.
