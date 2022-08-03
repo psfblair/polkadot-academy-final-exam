@@ -18,18 +18,18 @@ pub type BalanceTypeOf<T> = <<T as Config>::MainCurrency as Currency<AccountIdOf
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_system::{pallet_prelude::*};
 	use frame_support::{
-            PalletId,
-            pallet_prelude::*,
-            traits::{
-                Currency, LockableCurrency, WithdrawReasons, LockIdentifier,
-                tokens::ExistenceRequirement,
-            }
-        };
-    use frame_support::sp_runtime::{
-            traits::{AccountIdConversion, CheckedAdd, CheckedMul, CheckedDiv, Zero}
-        };
+			pallet_prelude::*,
+			sp_runtime::{
+				traits::{AccountIdConversion, CheckedAdd, CheckedMul, CheckedDiv, Zero}
+			}
+			traits::{
+				Currency, LockableCurrency, WithdrawReasons, LockIdentifier,
+				tokens::ExistenceRequirement,
+			}
+			PalletId, BoundedBTreeMap,
+	};
+	use frame_system::{pallet_prelude::*};
 	use sp_staking::{StakingInterface, EraIndex};
 	use crate::{AccountIdOf, BalanceTypeOf};
 
