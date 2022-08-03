@@ -70,13 +70,17 @@ pub mod pallet {
 	#[pallet::getter(fn nomination_locks_for)]
 	pub type NominationLocksStorage<T> = StorageMap<_, Twox64Concat, AccountIdOf<T>, BalanceTypeOf<T>>;
 
-	/// The votes 
+	/// The votes that each validator candidate has received in this round of voting.
 	///
 	/// TWOX-QUESTION: `AccountId`s are crypto hashes anyway, so is this safe? Aren't the IDs of validators generally known, and
 	/// if so would this be liable to being attacked by those who know those IDs?
 	#[pallet::storage]
 	#[pallet::getter(fn nomination_votes_for)]
 	pub type NominationsStorage<T> = StorageMap<_, Twox64Concat, AccountIdOf<T>, BalanceTypeOf<T>>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn era_of_previous_block)]
+	pub type EraOfPreviousBlock<T> = StorageValue<_, EraIndex>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -142,6 +146,13 @@ pub mod pallet {
 	
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		fn on_runtime_upgrade() -> Weight {
+			// Record the current era so that we can update it when it rolls over
+			if EraOfPreviousBlock::<T>::era_of_previous_block().is_none() {
+				EraOfPreviousBlock::<T>::put(StakingInterface::current_era());
+			}
+		}
+
 		// 1. If the current era is different from the era of the previous block, set this 
 		//    block as era start and reset the previous era tracker
 		// 2. Otherwise: Determine if we are voting_window blocks from the beginning of the era. If not, do nothing.
@@ -234,7 +245,8 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			// TODO Determine if we are within n blocks of the beginning of an era, else reject 
-			// TODO Determine if the submission is voting for accounts that are not actually nominatable.
+			// TODO Determine if the staker is voting for accounts that are not actually nominatable. This is important since without
+			//      it the endpoint could be spammed. Since we store the number of votes per validator this would eat up storage.
 
 			// Determine whether the submission has enough tokens in their free balance to match the tokens voted. If not, reject.
             let maybe_total_voted = nominations.iter().fold(

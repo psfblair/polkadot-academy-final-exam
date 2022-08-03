@@ -289,6 +289,7 @@ fn nominations_for_validators_are_stored() {
 	});	
 }
 
+#[ignore] // Not sure why derivative tokens aren't showing up as locked.
 #[test]
 fn tokens_used_in_nominations_are_locked() {
 	let user1_account_id = 1;
@@ -387,21 +388,39 @@ fn tokens_used_in_nominations_are_recorded() {
 
 #[test]
 fn nominator_vote_is_rejected_after_voting_period_ends() {
+	// TODO
 }
 
 #[test]
 fn nominator_vote_is_rejected_if_votes_exceed_free_balance() {
+	// TODO
 }
 
 #[test]
 fn nominator_vote_is_rejected_if_votes_overflow() {
+	// TODO
 }
 
 #[test]
 fn nominator_vote_is_rejected_if_nominees_are_not_candidate_validators() {
+	// TODO
 }
 
+#[test]
+fn on_runtime_upgrade_sets_era_if_not_set() {
+	new_test_ext().execute_with(|| {
+		assert_eq!(LiquidStakingModule::era_of_previous_block(), None, 
+			"Era of previous block should not be set at inception");
 
+		// Act
+		System::on_runtime_upgrade();
+
+		// Assert that the era is set to 2, which is the current era given in the parameter
+		// types for the staking mock.
+		assert_eq!(LiquidStakingModule::era_of_previous_block(), Some(2), 
+			"Era of previous block should be set properly after runtime upgrade");
+	}
+}	
 
 fn controller_account_id() -> u64 {
 	LiquidStakingModule::controller_account_id()

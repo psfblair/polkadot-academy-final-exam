@@ -83,9 +83,9 @@ impl pallet_balances::Config<DerivativeToken> for Test {
 	type WeightInfo = ();
 }
 
-// StakingMock below is taken from the nomination-pools pallet
+// StakingMock below is taken from the nomination-pools pallet, with minor changes.
 parameter_types! {
-	pub static CurrentEra: EraIndex = 0;
+	pub static CurrentEra: EraIndex = 2;
 	pub static BondingDuration: EraIndex = 3;
 	pub storage BondedBalanceMap: BTreeMap<AccountIdImpl, BalanceImpl> = Default::default();
 	pub storage UnbondingBalanceMap: BTreeMap<AccountIdImpl, BalanceImpl> = Default::default();
