@@ -3,7 +3,7 @@ use crate::{
     Event, Error,
 };
 use frame_support::{
-	traits::{Hooks, Currency, LockableCurrency, WithdrawReasons},
+	traits::{Hooks, Currency},
 	BoundedVec, assert_noop, assert_ok
 };
 use frame_system::pallet::Pallet;
