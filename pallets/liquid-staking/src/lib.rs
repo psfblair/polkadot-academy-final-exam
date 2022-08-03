@@ -313,6 +313,10 @@ pub mod pallet {
 				}
 			})?;
 
+			// Burn the derivative currency submitted
+			// This cannot fail, so we don't care about the return value.
+			let _ = T::DerivativeCurrency::slash(&who, amount);
+			
 			// Emit a DerivativeRedeemed event.
 			Self::deposit_event(Event::DerivativeRedeemed(who, amount, era_available));
 
