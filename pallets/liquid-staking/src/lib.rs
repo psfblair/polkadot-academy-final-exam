@@ -149,7 +149,7 @@ pub mod pallet {
 		fn on_runtime_upgrade() -> Weight {
 			// Record the current era so that we can update it when it rolls over
 			if Self::era_of_previous_block().is_none() {
-				let era_index: EraIndex = StakingInterface::current_era();
+				let era_index: EraIndex = T::StakingInterface::current_era();
 				EraOfPreviousBlock::<T>::put(era_index);
 				10 // TODO Figure out what this should be
 			} else {
