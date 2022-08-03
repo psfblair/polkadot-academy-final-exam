@@ -293,8 +293,8 @@ pub mod pallet {
 									None => Err(Error::<T>::VoteQuantityInvalid),
 								},
 							None => existing_map.try_insert(era_available, amount).map_or_else(
-								|_| Error::<T>::TooManyRedemptionsAwaitingWithdrawal,
 								|maybe_key_existed| (), // We know the key isn't actually already there because we checked it above. qed 
+								|_| Error::<T>::TooManyRedemptionsAwaitingWithdrawal,
 							),
 						}
 					}
