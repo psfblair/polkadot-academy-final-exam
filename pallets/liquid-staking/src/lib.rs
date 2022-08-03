@@ -50,7 +50,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MinimumStake: Get<BalanceTypeOf<Self>>;
 		#[pallet::constant]
-		type MaxValidatorNominees: Get<u8>; // Maybe this is like the 640k thing but I think voting for more than 255 validators would be ridiculous
+		type MaxValidatorNominees: Get<u32>; // Maybe this is like the 640k thing but I think voting for more than 255 validators would be ridiculous
 
 		type StakingInterface: sp_staking::StakingInterface<
 			Balance = BalanceTypeOf<Self>,
@@ -284,7 +284,7 @@ pub mod pallet {
 							}
 						},
 						None => {
-							*maybe_existing_value = Some(votes);
+							*maybe_existing_value = Some(*votes);
 							Ok(())
 						}
 					}
