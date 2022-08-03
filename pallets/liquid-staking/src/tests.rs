@@ -122,7 +122,6 @@ fn add_stake_mints_sdot_for_later_staker_after_slash() {
 	});	
 }
 
-// #[ignore] // Right now this isn't passing because the test setup to lock part of the balance of the stash account isn't working.
 #[test]
 fn add_stake_bonds_submitted_stake() {
 	let user_account_id = 1;
@@ -235,6 +234,54 @@ fn add_stake_fails_when_max_stake_exceeded() {
 	});
 }
 
+/////////////////////////////////////// TESTS FOR redeem_stake ////////////////////////////////////////////
+#[test]
+fn redeem_stake_burns_derivative_token() {
+	let user_account_id = 1;
+	let initial_balances = vec![
+		(user_account_id, 10, 70),
+		(stash_account_id(), 20, 0),
+		(controller_account_id(), 0, 0),
+	];
+
+
+	// Arrange: Account 1 starts with 70 sDOT
+	new_test_ext(initial_balances).execute_with(|| {
+		// Act: Account 1 redeems 20
+		assert_ok!(LiquidStakingModule::redeem_stake(Origin::signed(user_account_id), 20));
+
+		// Assert: Account 1 has 20 fewer sDOT but the stash has not gained sDOT
+		assert_eq!(<DerivativeBalances as Currency<u64>>::total_balance(&user_account_id), 50, 
+				"origin sDOT balance was not decreased by redeemed amount");	
+		assert_eq!(<DerivativeBalances as Currency<u64>>::total_issuance(), 50, 
+				"total sDOT issuance was not decreased by staked amount at redemption");
+
+		assert_eq!(<DerivativeBalances as Currency<u64>>::total_balance(&stash_account_id()), 0, 
+				"stash sDOT account balance was not unaffected by redemption");
+		assert_eq!(<DerivativeBalances as Currency<u64>>::total_balance(&controller_account_id()), 0, 
+				"controller sDOT account balance was not unaffected by redemption");
+	});
+}
+
+#[test]
+fn redeem_stake_stores_quantity_of_derivative_token_redeemed_along_with_unbonding_date() {
+	let user_account_id = 1;
+	let initial_balances = vec![
+		(user_account_id, 10, 70),
+		(stash_account_id(), 20, 0),
+		(controller_account_id(), 0, 0),
+	];
+
+	// Arrange: Account 1 starts with 70 sDOT
+	new_test_ext(initial_balances).execute_with(|| {
+		// Act: Account 1 redeems 20
+		assert_ok!(LiquidStakingModule::redeem_stake(Origin::signed(user_account_id), 20));
+
+		// Assert Account 1 is due 20 dot at the end of the unbonding period:
+		// Mock sets us in Era 2 with a bonding duration of 3, so we expect to get them back in era 5
+		assert_eq!(LiquidStakingModule::redemptions_awaiting_withdrawal(user_account_id).unwrap(), vec![(20, 5)] );
+	});
+}
 /////////////////////////////////////// VALIDATOR VOTE TESTS ////////////////////////////////////////////
 
 #[test]
@@ -406,6 +453,8 @@ fn nominator_vote_is_rejected_if_nominees_are_not_candidate_validators() {
 	// TODO
 }
 
+///////////////////////////////////  TESTS FOR HOOKS ////////////////////////////////////////////
+
 #[ignore] // For some reason even though there is no failure happening here, storage is not changed
           // and print statements in the body of on_runtime_upgrade never get hit.
           // on_runtime_upgrade itself is returning 0, indicating that the hook is never getting
@@ -424,6 +473,30 @@ fn on_runtime_upgrade_sets_era_if_not_set() {
 		assert_eq!(LiquidStakingModule::era_of_previous_block(), Some(2), 
 			"Era of previous block should be set properly after runtime upgrade");
 	});
+}	
+
+#[test]
+fn on_initialize_sets_first_block_of_era() {
+	// TODO
+}	
+
+#[test]
+fn on_initialize_tallies_votes_when_voting_period_is_over() {
+	// TODO
+}	
+#[test]
+fn on_initialize_adjusts_nominations_when_voting_period_is_over() {
+	// TODO
+}
+
+#[test]
+fn on_initialize_reinitializes_vote_storage_when_voting_period_is_over() {
+	// TODO
+}	
+
+#[test]
+fn on_initialize_unlocks_derivative_tokens_locked_during_voting() {
+	// TODO
 }	
 
 fn controller_account_id() -> u64 {

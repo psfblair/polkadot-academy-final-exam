@@ -47,10 +47,20 @@ pub mod pallet {
 		type PalletId: Get<PalletId>;
         #[pallet::constant]
 		type PalletId2: Get<PalletId>;
+		/// The minimum quantity of the main currency that is allowed to be staked.
 		#[pallet::constant]
 		type MinimumStake: Get<BalanceTypeOf<Self>>;
+		/// The largest number of validators that can possibly be nominated, which sets a bound for the vector passed in
+		/// when the staker submits a nomination.
 		#[pallet::constant]
 		type MaxValidatorNominees: Get<u32>; // Maybe this is like the 640k thing but I think voting for more than 255 validators would be ridiculous
+		/// Number of blocks after the start of the era during which stakers can vote on which validators the pool will nominate.
+		#[pallet::constant]
+		type NominatorVotingPeriodBlocks: Get<u32>;
+		/// The bound for the max number of eras that can be held in the BoundedBTreeMap holding token redemption information. 
+		/// See the documentation of `RedemptionsAwaitingWithdrawal` below. 
+		#[pallet::constant]
+		type WithdrawalBound: Get<u32>; 
 
 		type StakingInterface: sp_staking::StakingInterface<
 			Balance = BalanceTypeOf<Self>,
@@ -62,10 +72,34 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	/// The quantity of derivative tokens an account has locked during the voting period.
+	/// The era of the previous block, for detecting the block when the era changes.
+	#[pallet::storage]
+	#[pallet::getter(fn era_of_previous_block)]
+	pub type EraOfPreviousBlock<T> = StorageValue<_, EraIndex>;
+
+	/// The block number of the start of the current era.
+	#[pallet::storage]
+	#[pallet::getter(fn era_start_block)]
+	pub type EraStartBlockNumber<T> = StorageValue<_, BlockNumber>;
+
+	/// The number of derivative tokens that a stakeholder has redeemed, paired with the era when the stakeholder
+	/// can withdraw the corresponding main token from the stash account. Since one account can redeem tokens multiple
+	/// times, the value is a vector of such pairs. There is potentially a way for this vector to grow large if a 
+	/// stakeholder redeems tokens and then does not withdraw the funds, over a long period of time. We will collapse
+	/// the data by making it instead a map of maps: account_id -> era -> amount  . Besides the economic disincentive
+	/// that failing to withdraw one's tokens makes spamming the system expensive, we can also institute a BoundedBTreeMap
+	/// such that if a stakeholder is waiting to withdraw tokens for more than a configurable number of eras, those entries
+	/// fall out of the map and redemption can no longer occur.
 	///
 	/// TWOX-QUESTION: `AccountId`s are crypto hashes anyway, so is this safe? What if an attacker knew a user's account ID and
-	/// wanted to change their votes?  
+	/// wanted to change their redemptions? Isn't this account ID a public thing?
+	#[pallet::storage]
+	#[pallet::getter(fn redemptions_awaiting_withdrawal)]
+	pub type RedemptionsAwaitingWithdrawal<T> = StorageMap<_, Twox64Concat, AccountIdOf<T>, BoundedBTreeMap<EraIndex, BalanceTypeOf<T>, WithdrawalBound>>;
+
+	/// The quantity of derivative tokens an account has locked during the voting period.
+	///
+	/// TWOX-QUESTION: Same question as above 
 	#[pallet::storage]
 	#[pallet::getter(fn nomination_locks_for)]
 	pub type NominationLocksStorage<T> = StorageMap<_, Twox64Concat, AccountIdOf<T>, BalanceTypeOf<T>>;
@@ -78,10 +112,6 @@ pub mod pallet {
 	#[pallet::getter(fn nomination_votes_for)]
 	pub type NominationsStorage<T> = StorageMap<_, Twox64Concat, AccountIdOf<T>, BalanceTypeOf<T>>;
 
-	#[pallet::storage]
-	#[pallet::getter(fn era_of_previous_block)]
-	pub type EraOfPreviousBlock<T> = StorageValue<_, EraIndex>;
-
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -90,7 +120,7 @@ pub mod pallet {
 
 		/// An account has redeemed a certain amount of the derivative token with the pallet. The underlying 
 		/// main token may be claimed on the era specified in the event. [account, amount, era, transaction_id]
-		DerivativeRedeemed(AccountIdOf<T>, BalanceTypeOf<T>, EraIndex, T::TransactionId),
+		DerivativeRedeemed(AccountIdOf<T>, BalanceTypeOf<T>, EraIndex),
 		
 		/// The staking tokens associated with the redeemed liquid tokens have been unbonded and 
 		/// credited to the staker [account, amount]
@@ -107,16 +137,23 @@ pub mod pallet {
 		/// Amount staked exceeded maximum amount allowed
 		ExceededMaxStake,
 
-		// VoteUnauthorized,
+		/// A request was made to redeem a auantity of derivative token that was greater
+		/// than the free balance in the account.
+		InsufficientFundsForRedemption,
+
+		// A request to vote for validators has originated from an account that does not
+		// hold the derivative token, or at a time when voting is not taking place.
+		VoteUnauthorized,
 
 		/// The quantity of votes submitted exceeded the submitter's free balance of
 		/// the derivative token or exceeded the maximum allowable value of those tokens.
 		VoteQuantityInvalid,
 
-		/// The number of votes received by the validator exceeds the maximum permissible amount.
+		/// The number of votes received by a validator exceeds the maximum permissible amount.
 		ValidatorVoteQuantityInvalid,
 
-		// NoSuchValidator,
+		/// A vote was received to nominate an address that is not a candidate validator.
+		NoSuchValidator,
 		// NoSuchReferendum,
 		// ReferendumUnavailable,
 	}
@@ -146,27 +183,27 @@ pub mod pallet {
 	
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn on_runtime_upgrade() -> Weight {
-			// Record the current era so that we can update it when it rolls over
-			if Self::era_of_previous_block().is_none() {
-				let era_index: EraIndex = T::StakingInterface::current_era();
-				EraOfPreviousBlock::<T>::put(era_index);
-				10 // TODO Figure out what this should be
-			} else {
-				5  // TODO And this
+		fn on_initialize(block_number: T::BlockNumber) -> Weight {
+			match Self::era_of_previous_block() {
+				Some(era) => 
+					// If the current era is different from the era of the previous block, set this 
+					// block as era start and reset the previous era tracker
+					if T::StakingInterface::current_era() > era { 
+						EraOfPreviousBlock::<T>::put(T::StakingInterface::current_era());
+						EraStartBlockNumber::<T>::put(block_number);
+					// Otherwise, if we are the configured number of blocks from the beginning of the era
+					// (not using safe math here because we are in control of the configuration and the block numbers)
+					} else if block_number == Self::era_start_block() + NominatorVotingPeriodBlocks {
+						// TODO Unlock all derivative tokens locked
+						// TODO Tally all votes
+						// TODO Adjust nominations. This is done via the nominate() endpoint on the StakingInterface
+						// TODO Reinitialize storage for the next round of voting - both storage of locked tokens and storage of votes						
+					},
+				// Record the current era so that we can update it when it rolls over
+				None => EraOfPreviousBlock::<T>::put(T::StakingInterface::current_era()),
 			}
-		}
 
-		// 1. If the current era is different from the era of the previous block, set this 
-		//    block as era start and reset the previous era tracker
-		// 2. Otherwise: Determine if we are voting_window blocks from the beginning of the era. If not, do nothing.
-		// 3. If so, then:
-			// Unlock all derivative tokens locked
-			// Tally all votes
-			// Adjust nominations
-			// Reinitialize storage for the next round of voting - both storage of locked tokens and storage of votes
-		fn on_initialize(_n: T::BlockNumber) -> Weight {
-			0
+			0 // TODO Figure out what weights should be 
 		}
 	}
 
@@ -205,7 +242,7 @@ pub mod pallet {
 				_ => ()
 			}
 
-			// Emit an event.
+			// Emit a StakeAdded event.
 			Self::deposit_event(Event::StakeAdded(who, amount));
 
 			Ok(())
@@ -213,24 +250,60 @@ pub mod pallet {
 
 		/// Submit an amount of the derivative token to redeem for the main token. The derivative
 		/// token is immediately burned; the amount is recorded in storage along with the era
-		/// the underlying funds will be available, and keyed by a transaction ID that can be
-		/// used by the staker to retrieve the funds as of that era. The DerivativeRedeemed
-		/// event indicates the era when the active bonded balance can be withdrawn and the 
-		/// transaction ID that can be used to withdraw it.
+		/// the underlying funds will be available. The DerivativeRedeemed event indicates 
+		/// the amount and the era when the active bonded balance can be withdrawn.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))] // TODO Benchmark eventually
 		pub fn redeem_stake(origin: OriginFor<T>, amount: BalanceTypeOf<T>) -> DispatchResult {
+			// Ensure signature
+			let who = ensure_signed(origin)?;
+
+			// Ensure that the staker has at least the specified quantity free in their derivative token balance
+			ensure!(amount < T::DerivativeCurrency::free_balance(&who), Error::<T>::InsufficientFundsForRedemption);
+
+			// The era when funds will be available. This addition is safe, since the era and duration come from the pallet.
+			let era_available = T::StakingInterface::current_era() + T::StakingInterface::bonding_duration();
+
+			// Add the amount and the era available to storage.
+			// TODO This code is way too complex and likely to be buggy. 
+			RedemptionsAwaitingWithdrawal::<T>::try_mutate(who, |maybe_existing_value| {
+				match maybe_existing_value {
+					Some(existing_map) => {
+						match existing_map.get_mut(era_available) {
+							Some(existing_value) => 
+								match existing_value.checked_add(&amount) {
+									maybe_total @ Some(total) => { 
+										*existing_value = maybe_total; 
+										Ok(())
+									},
+									None => Err(Error::<T>::VoteQuantityInvalid),
+								},
+							None => existing_map.try_insert(era_available, amount),
+						}
+					}
+					None => {
+						let map = BoundedBTreeMap::<EraIndex, BalanceTypeOf<T>, WithdrawalBound>::new();
+						map.try_insert(era_available, amount)?; 
+						*maybe_existing_value = Some(map);
+						Ok(())
+					},
+				}
+			})?;
+
+			// Emit a DerivativeRedeemed event.
+			Self::deposit_event(Event::DerivativeRedeemed(who, amount, era_available));
+
             Ok(())
 		}
 
 		/// Withdraw the amount of the main token that corresponds to the amount of derivative
-		/// token redeemed in the given transaction_id (which is obtained from the event deposited
-		/// by `redeem_stake`). The unbonding period has to have elapsed before withdrawal may
-		/// proceed. The amount redeemed corresponds to the current value of the quantity of 
+		/// token available for withdrawal at the given era (which may be seen in the events 
+		/// deposited by `redeem_stake`). The unbonding period has to have elapsed before withdrawal 
+		/// may proceed. The amount redeemed corresponds to the current value of the quantity of 
 		/// derivative token redeemed in the prior call to `redeem_stake`, not the value at the 
 		/// time of redemption; it is important to note that the value may have been affected by 
 		/// slashing or rewards in the meantime. 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))] // TODO Benchmark eventually
-		pub fn withdraw_stake(origin: OriginFor<T>, transaction_id: T::TransactionId) -> DispatchResult {
+		pub fn withdraw_stake(origin: OriginFor<T>, for_era: T::TransactionId) -> DispatchResult {
             Ok(())
 		}
 
@@ -248,9 +321,10 @@ pub mod pallet {
 			// Ensure signature     
 			let who = ensure_signed(origin)?;
 
-			// TODO Determine if we are within n blocks of the beginning of an era, else reject 
-			// TODO Determine if the staker is voting for accounts that are not actually nominatable. This is important since without
-			//      it the endpoint could be spammed. Since we store the number of votes per validator this would eat up storage.
+			// TODO Determine if we are within n blocks of the beginning of an era, else reject with VoteUnauthorized
+			// TODO Determine if the staker is voting for accounts that are not actually nominatable; if so reject with NoSuchValidator. 
+			// 		This is important since without this check the endpoint could be spammed. Since we store the number of votes per 
+			// 		validator this would eat up storage.
 
 			// Determine whether the submission has enough tokens in their free balance to match the tokens voted. If not, reject.
             let maybe_total_voted = nominations.iter().fold(

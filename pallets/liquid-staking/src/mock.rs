@@ -42,6 +42,8 @@ parameter_types! {
 	pub const PalletIdImpl2: PalletId = PalletId(*b"py/lstkg");
 	pub const MinimumStakeImpl: BalanceImpl = 2;
 	pub const MaxValidatorNomineesImpl: u8 = 16;
+	pub const NominatorVotingPeriodBlocks: u8 = 600;  // Make voting happen in a 1-hour window if we're on Polkadot
+	pub const WithdrawalBoundImpl: u8 = 20;
 	pub static ExistentialDepositImpl: BalanceImpl = 0;
 }
 
@@ -51,6 +53,7 @@ impl crate::pallet::Config for Test {
 	type PalletId2 = PalletIdImpl2;
 	type MinimumStake = MinimumStakeImpl;
 	type MaxValidatorNominees = MaxValidatorNomineesImpl;
+	type WithdrawalBound = WithdrawalBoundImpl;
 	type MainCurrency = MainBalances;
 	type DerivativeCurrency = DerivativeBalances;
 	type TransactionId = <Test as frame_system::Config>::Hash;
