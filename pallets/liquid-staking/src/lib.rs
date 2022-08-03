@@ -22,11 +22,11 @@ pub mod pallet {
 			pallet_prelude::*,
 			sp_runtime::{
 				traits::{AccountIdConversion, CheckedAdd, CheckedMul, CheckedDiv, Zero}
-			}
+			},
 			traits::{
 				Currency, LockableCurrency, WithdrawReasons, LockIdentifier,
 				tokens::ExistenceRequirement,
-			}
+			},
 			PalletId, BoundedBTreeMap,
 	};
 	use frame_system::{pallet_prelude::*};
@@ -80,7 +80,7 @@ pub mod pallet {
 	/// The block number of the start of the current era.
 	#[pallet::storage]
 	#[pallet::getter(fn era_start_block)]
-	pub type EraStartBlockNumber<T> = StorageValue<_, BlockNumber>;
+	pub type EraStartBlockNumber<T> = StorageValue<_, BlockNumberFor<T>>;
 
 	/// The number of derivative tokens that a stakeholder has redeemed, paired with the era when the stakeholder
 	/// can withdraw the corresponding main token from the stash account. Since one account can redeem tokens multiple
@@ -95,7 +95,7 @@ pub mod pallet {
 	/// wanted to change their redemptions? Isn't this account ID a public thing?
 	#[pallet::storage]
 	#[pallet::getter(fn redemptions_awaiting_withdrawal)]
-	pub type RedemptionsAwaitingWithdrawal<T> = StorageMap<_, Twox64Concat, AccountIdOf<T>, BoundedBTreeMap<EraIndex, BalanceTypeOf<T>, WithdrawalBound>>;
+	pub type RedemptionsAwaitingWithdrawal<T> = StorageMap<_, Twox64Concat, AccountIdOf<T>, BoundedBTreeMap<EraIndex, BalanceTypeOf<T>, <T as Config>::WithdrawalBound>>;
 
 	/// The quantity of derivative tokens an account has locked during the voting period.
 	///
@@ -193,7 +193,7 @@ pub mod pallet {
 						EraStartBlockNumber::<T>::put(block_number);
 					// Otherwise, if we are the configured number of blocks from the beginning of the era
 					// (not using safe math here because we are in control of the configuration and the block numbers)
-					} else if block_number == Self::era_start_block() + NominatorVotingPeriodBlocks {
+					} else if block_number == Self::era_start_block() + T::NominatorVotingPeriodBlocks::get() {
 						// TODO Unlock all derivative tokens locked
 						// TODO Tally all votes
 						// TODO Adjust nominations. This is done via the nominate() endpoint on the StakingInterface
@@ -268,7 +268,7 @@ pub mod pallet {
 			RedemptionsAwaitingWithdrawal::<T>::try_mutate(who, |maybe_existing_value| {
 				match maybe_existing_value {
 					Some(existing_map) => {
-						match existing_map.get_mut(era_available) {
+						match existing_map.get_mut(&era_available) {
 							Some(existing_value) => 
 								match existing_value.checked_add(&amount) {
 									maybe_total @ Some(total) => { 
@@ -281,7 +281,7 @@ pub mod pallet {
 						}
 					}
 					None => {
-						let map = BoundedBTreeMap::<EraIndex, BalanceTypeOf<T>, WithdrawalBound>::new();
+						let map = BoundedBTreeMap::<EraIndex, BalanceTypeOf<T>, T::WithdrawalBound>::new();
 						map.try_insert(era_available, amount)?; 
 						*maybe_existing_value = Some(map);
 						Ok(())
