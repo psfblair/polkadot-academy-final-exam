@@ -56,7 +56,7 @@ pub mod pallet {
 		type MaxValidatorNominees: Get<u32>; // Maybe this is like the 640k thing but I think voting for more than 255 validators would be ridiculous
 		/// Number of blocks after the start of the era during which stakers can vote on which validators the pool will nominate.
 		#[pallet::constant]
-		type NominatorVotingPeriodBlocks: Get<u32>;
+		type NominatorVotingPeriodBlocks: Get<BlockNumber>;
 		/// The bound for the max number of eras that can be held in the BoundedBTreeMap holding token redemption information. 
 		/// See the documentation of `RedemptionsAwaitingWithdrawal` below. 
 		#[pallet::constant]
