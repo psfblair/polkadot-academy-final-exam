@@ -251,19 +251,42 @@ pub mod pallet {
 			// Lock that quantity of derivative token in the origin's account
 			T::DerivativeCurrency::set_lock(NOMINATION_LOCK_ID, &who, total_voted, WithdrawReasons::RESERVE);
 
-			// Store the account and the number of tokens locked for that account (add to the total)
-			NominationLocksStorage::<T>::try_mutate(who, |maybe_value| {
-				match maybe_value {
-					Some(prior_amount) => *maybe_value = Some(prior_amount.checked_add(total_voted).ok_or(Error::<T>::VoteQuantityInvalid)?),
-					None => *maybe_value = Some(total_voted),
+			// Store the account and the number of tokens locked for that account (add to the total).
+			NominationLocksStorage::<T>::try_mutate(who, |maybe_existing_value| {
+				match maybe_existing_value {
+					Some(prior_amount) => {
+						match prior_amount.checked_add(total_voted) {
+							maybe_total @ Some(total) => { 
+								*maybe_existing_value = maybe_total; 
+								Ok(())
+							 },
+							 None => Error::<T>::VoteQuantityInvalid,
+						}
+					}
+					None => {
+						*maybe_existing_value = Some(total_voted)
+						Ok(())
+					},
 				}
 			})?;
-			// Store the nominations and the amounts (adding to the totals)
+			// Store the nominations and the amounts (adding to the totals). This is bounded by the number of 
+			// nominators, which we control through configuration.
 			for (validator, votes) in nominations.iter() {
-				NominationsStorage::<T>::try_mutate(validator, |maybe_value| {
-					match maybe_value {
-						Some(prior_amount) => *maybe_value = Some(prior_amount.checked_add(votes).ok_or(Error::<T>::ValidatorVoteQuantityInvalid)??),
-						None => *maybe_value = Some(votes),
+				NominationsStorage::<T>::try_mutate(validator, |maybe_existing_value| {
+					match maybe_existing_value {
+						Some(prior_amount) => {
+							match prior_amount.checked_add(votes) {
+								maybe_total @ Some(total) => { 
+									*maybe_existing_value = maybe_total; 
+									Ok(())
+								},
+								None => Error::<T>::ValidatorVoteQuantityInvalid,
+							}
+						},
+						None => {
+							*maybe_existing_value = Some(votes),
+							Ok(())
+						}
 					}
 				})?;		
 			}
