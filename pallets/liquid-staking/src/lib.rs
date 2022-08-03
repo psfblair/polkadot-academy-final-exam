@@ -248,6 +248,7 @@ pub mod pallet {
 			); 
 			let total_voted = maybe_total_voted.ok_or(Error::<T>::VoteQuantityInvalid)?;
 
+			// TODO This doesn't seem to be working, or at least the test doesn't show that the free balance is affected.
 			// Lock that quantity of derivative token in the origin's account
 			T::DerivativeCurrency::set_lock(NOMINATION_LOCK_ID, &who, total_voted, WithdrawReasons::RESERVE);
 

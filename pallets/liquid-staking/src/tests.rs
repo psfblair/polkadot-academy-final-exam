@@ -135,9 +135,8 @@ fn add_stake_bonds_submitted_stake() {
 	
 	// Arrange: Stash account has 30 DOT
 	new_test_ext(initial_balances).execute_with(|| {
-		// Arrange: Stash account is bonded and stash funds are locked
+		// Arrange: Stash account is bonded
 		assert_ok!(StakingMock::bond(stash_account_id, controller_account_id(), bonded_amount, stash_account_id));
-		<MainBalances as LockableCurrency<u64>>::set_lock(*b"stlockid", &stash_account_id, bonded_amount, WithdrawReasons::RESERVE);
 
 		// Act: Add a stake of 5
 		assert_ok!(LiquidStakingModule::add_stake(Origin::signed(user_account_id), 5));
@@ -310,10 +309,10 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user1_account_id), nominations_1));
 
 		// Assert: Account 1 tokens are locked and the number of locked tokens is recorded in storage
-		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user1_account_id), initial_1 - committed_1, 
-			"Number of tokens locked is not correct for user 1");	
 		assert_eq!(LiquidStakingModule::nomination_locks_for(&user1_account_id).unwrap(), committed_1,
 			"Number of locked tokens is not stored correctly for user 1");
+		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user1_account_id), initial_1 - committed_1, 
+			"Number of tokens locked is not correct for user 1");	
 
 		// Act: Account 2 submits nominations
 		let nominations_2 = BoundedVec::try_from(
@@ -323,10 +322,10 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user2_account_id), nominations_2));
 
 		// Assert: Account 2 tokens are locked and the number of locked tokens is recorded in storage
-		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user2_account_id), initial_2 - committed_2, 
-			"Number of tokens locked is not correct for user 2");	
 		assert_eq!(LiquidStakingModule::nomination_locks_for(&user2_account_id).unwrap(), committed_2,
 			"Number of locked tokens is not stored correctly for user 2");
+		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user2_account_id), initial_2 - committed_2, 
+			"Number of tokens locked is not correct for user 2");	
 
 		// Act: Account 1 submits more nominations
 		let nominations_3 = BoundedVec::try_from(
