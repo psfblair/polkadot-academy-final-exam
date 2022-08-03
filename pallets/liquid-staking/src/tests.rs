@@ -408,7 +408,7 @@ fn nominator_vote_is_rejected_if_nominees_are_not_candidate_validators() {
 
 #[test]
 fn on_runtime_upgrade_sets_era_if_not_set() {
-	new_test_ext().execute_with(|| {
+	new_test_ext(Vec::new()).execute_with(|| {
 		assert_eq!(LiquidStakingModule::era_of_previous_block(), None, 
 			"Era of previous block should not be set at inception");
 

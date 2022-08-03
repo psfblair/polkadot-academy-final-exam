@@ -150,6 +150,9 @@ pub mod pallet {
 			// Record the current era so that we can update it when it rolls over
 			if EraOfPreviousBlock::<T>::era_of_previous_block().is_none() {
 				EraOfPreviousBlock::<T>::put(StakingInterface::current_era());
+				10 // TODO Figure out what this should be
+			} else {
+				5  // TODO And this
 			}
 		}
 
