@@ -234,7 +234,7 @@ fn add_stake_fails_when_max_stake_exceeded() {
 	});
 }
 
-/////////////////////////////////////// TESTS FOR redeem_stake ////////////////////////////////////////////
+////////////////////////////////////// REDEEM STAKE TESTS ////////////////////////////////////////////
 #[test]
 fn redeem_stake_burns_derivative_token() {
 	let user_account_id = 1;
@@ -282,6 +282,22 @@ fn redeem_stake_stores_quantity_of_derivative_token_redeemed_along_with_unbondin
 		assert_eq!(LiquidStakingModule::redemptions_awaiting_withdrawal(user_account_id).unwrap(), vec![(20, 5)] );
 	});
 }
+
+
+////////////////////////////////// REDEEM STAKE FAILURE SCENARIO TESTS ///////////////////////////////////
+
+
+#[test]
+fn redeem_stake_fails_when_user_overflows_max_number_of_votes() {
+	// TODO
+}
+
+#[test]
+fn redeem_stake_fails_when_user_has_too_many_unredeemed_redemptions() {
+	// TODO
+}
+
+
 /////////////////////////////////////// VALIDATOR VOTE TESTS ////////////////////////////////////////////
 
 #[test]

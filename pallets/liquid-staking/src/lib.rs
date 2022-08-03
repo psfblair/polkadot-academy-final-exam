@@ -268,20 +268,19 @@ pub mod pallet {
 			let era_available = T::StakingInterface::current_era() + T::StakingInterface::bonding_duration();
 
 			// Add the amount and the era available to storage.
-			// TODO This code is way too complex and likely to be buggy. 
+			// TODO Refactor this code!
 			RedemptionsAwaitingWithdrawal::<T>::try_mutate(who, |maybe_existing_value| {
 				match maybe_existing_value {
 					Some(existing_map) => {
 						match existing_map.get_mut(&era_available) {
 							Some(existing_value) => 
 								match existing_value.checked_add(&amount) {
-									maybe_total @ Some(total) => { 
-										*existing_value = maybe_total; 
-										Ok(())
-									},
+									Some(total) => { *existing_value = total;  Ok(()) },
 									None => Err(Error::<T>::VoteQuantityInvalid),
 								},
-							None => existing_map.try_insert(era_available, amount).ok_or(Err(Error::<T>::TooManyRedemptionsAwaitingWithdrawal)),
+							None => existing_map.try_insert(era_available, amount).map_err(
+										Err(Error::<T>::TooManyRedemptionsAwaitingWithdrawal)
+									),
 						}
 					}
 					None => {
