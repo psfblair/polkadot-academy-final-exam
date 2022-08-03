@@ -196,22 +196,24 @@ pub mod pallet {
 							EraOfPreviousBlock::<T>::put(T::StakingInterface::current_era());
 							EraStartBlockNumber::<T>::put(block_number);
 							10 // TODO Figure out what weights should be 
-					} else match Self::era_start_block() 
-						// Otherwise, if we are the configured number of blocks from the beginning of the era
-						// (not using safe math here because we are in control of the configuration and the block numbers)
-						Some(era_start_block_number) => {
-							if block_number == era_start_block_number + T::NominatorVotingPeriodBlocks::get() {
-								
-								// TODO Unlock all derivative tokens locked
-								// TODO Tally all votes
-								// TODO Adjust nominations. This is done via the nominate() endpoint on the StakingInterface
-								// TODO Reinitialize storage for the next round of voting - both storage of locked tokens and storage of votes						
+					} else {
+						match Self::era_start_block() 
+							// Otherwise, if we are the configured number of blocks from the beginning of the era
+							// (not using safe math here because we are in control of the configuration and the block numbers)
+							Some(era_start_block_number) => {
+								if block_number == era_start_block_number + T::NominatorVotingPeriodBlocks::get() {
 
-								100 // TODO Figure out what weights should be 
-							} else {
-								0 // Do nothing; TODO Figure out what weights should be 
-							},
-						None => 0 // Do nothing; TODO Figure out what weights should be 
+									// TODO Unlock all derivative tokens locked
+									// TODO Tally all votes
+									// TODO Adjust nominations. This is done via the nominate() endpoint on the StakingInterface
+									// TODO Reinitialize storage for the next round of voting - both storage of locked tokens and storage of votes						
+
+									100 // TODO Figure out what weights should be 
+								} else {
+									0 // Do nothing; TODO Figure out what weights should be 
+								},
+							None => 0 // Do nothing; TODO Figure out what weights should be 
+						}
 					},
 				// Record the current era so that we can update it when it rolls over
 				None => EraOfPreviousBlock::<T>::put(T::StakingInterface::current_era()),
