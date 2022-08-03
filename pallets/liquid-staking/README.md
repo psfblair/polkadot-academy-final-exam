@@ -1,7 +1,8 @@
 # Liquid Staking Pallet
 
 ## Overview
-This pallet is designed to let users stake funds in a token called the `main currency` and receive back a token called the
+This pallet is designed to let users stake funds in a token 
+called the `main currency` and receive back a token called the
 `derivative currency`. The derivative is liquid and can be 
 exchanged like a normal token. The staked funds are 
 controlled by the pallet to nominate validators; 
@@ -71,6 +72,14 @@ User submits `amount` to be staked in a signed transaction
 from `origin`.
 
 ```
+pub fn redeem_stake(origin: OriginFor<T>, amount: BalanceTypeOf<T>) -> DispatchResult
+```
+This endpoint allows the user at `origin` to designate
+`amount` of the derivative currency for redemption. A 
+`DerivativeRedeemed` event indicates the era at the end of 
+the bonding period.
+
+```
 pub fn nominate(origin: OriginFor<T>, 
 						nominations: BoundedVec<(AccountIdOf<T>, BalanceTypeOf<T>) -> DispatchResult
 ```
@@ -93,14 +102,6 @@ the `nomination-pools` pallet (and tweaked a little bit).
 
 The following additional dispatchables are envisioned, but
 not yet implemented:
-
-```
-pub fn redeem_stake(origin: OriginFor<T>, amount: BalanceTypeOf<T>) -> DispatchResult
-```
-This endpoint would allow the user at `origin` to designate
-`amount` of the derivative currency for redemption. An 
-event would indicate the era at the end of the bonding
-period.
 
 ```
 pub fn withdraw_stake(origin: OriginFor<T>) -> DispatchResult
