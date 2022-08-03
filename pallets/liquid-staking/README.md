@@ -90,6 +90,20 @@ specified by `accountId`. Currently there is no implementation
 for limiting the account IDs receiving votes to the 
 candidate validator pool.
 
+In addition, the `on_initialize` hook is implemented, which
+does the following:
+
+1. Initializes the storage for the era of the previous block if it hasn't been initialized
+2. Rolls over the value for the era of the previous block when the era changes
+3. Sets the block number of the start of the era when the era changes
+4. If the voting period is over (a configured period from the start of the era), then 
+   it should do the following (not yet implemented):
+   * Unlock all derivative tokens locked
+   * Tally all votes
+   * Adjust nominations. This is done via the nominate() endpoint on the StakingInterface
+   * Reinitialize storage for the next round of voting - both storage of locked tokens and storage of votes
+
+
 ### Tests
 
 Testing is fairly extensive; unimplemented tests are also
@@ -117,6 +131,7 @@ pub fn referendum_vote(origin: OriginFor<T>, referendum_vote: ReferendumIndex, c
 This endpoint would allow users to request delegated votes
 from the pool for a referendum `ReferendumIndex` in proportion
 to the amount of derivative currency assigned by `commitment`.
+This would require wiring in `pallet-democracy`.
 
 ## How to see it work
 
