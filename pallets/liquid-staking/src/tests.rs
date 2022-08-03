@@ -290,7 +290,7 @@ fn nominations_for_validators_are_stored() {
 }
 
 #[test]
-fn tokens_used_in_nominations_are_locked_and_recorded() {
+fn tokens_used_in_nominations_are_locked() {
 	let user1_account_id = 1;
 	let initial_1 = 48;
 	let user2_account_id = 2;
@@ -308,9 +308,7 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 		let committed_1 = 40;
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user1_account_id), nominations_1));
 
-		// Assert: Account 1 tokens are locked and the number of locked tokens is recorded in storage
-		assert_eq!(LiquidStakingModule::nomination_locks_for(&user1_account_id).unwrap(), committed_1,
-			"Number of locked tokens is not stored correctly for user 1");
+		// Assert: Account 1 tokens are locked
 		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user1_account_id), initial_1 - committed_1, 
 			"Number of tokens locked is not correct for user 1");	
 
@@ -321,9 +319,7 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 		let committed_2 = 32;
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user2_account_id), nominations_2));
 
-		// Assert: Account 2 tokens are locked and the number of locked tokens is recorded in storage
-		assert_eq!(LiquidStakingModule::nomination_locks_for(&user2_account_id).unwrap(), committed_2,
-			"Number of locked tokens is not stored correctly for user 2");
+		// Assert: Account 2 tokens are locked
 		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user2_account_id), initial_2 - committed_2, 
 			"Number of tokens locked is not correct for user 2");	
 
@@ -334,9 +330,54 @@ fn tokens_used_in_nominations_are_locked_and_recorded() {
 		let committed_3 = 8;
 		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user1_account_id), nominations_3));
 
-		// Assert: More Account 1 tokens are locked and the total number of locked tokens is recorded in storage
+		// Assert: More Account 1 tokens are locked
 		assert_eq!(<DerivativeBalances as Currency<u64>>::free_balance(&user1_account_id), initial_1 - (committed_1 + committed_3), 
 			"Number of tokens locked is not correct for user 1");	
+	});	
+}
+
+#[test]
+fn tokens_used_in_nominations_are_recorded() {
+	let user1_account_id = 1;
+	let initial_1 = 48;
+	let user2_account_id = 2;
+	let initial_2 = 32;
+	let initial_balances = vec![
+		(user1_account_id, 0, initial_1),
+		(user2_account_id, 0, initial_2),
+	];
+	// Arrange: Users 1 and 2 both have derivative tokens
+	new_test_ext(initial_balances).execute_with(|| {
+		// Act: Account 1 submits some nominations, but not their entire amount
+		let nominations_1 = BoundedVec::try_from(
+								vec![(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
+							 	 	 (18, 3),(19, 3),(20, 3),(21, 3),(22, 3),(23, 3),(24, 3),(25, 3)]).unwrap();
+		let committed_1 = 40;
+		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user1_account_id), nominations_1));
+
+		// Assert: The number of Account 1 locked tokens is recorded in storage
+		assert_eq!(LiquidStakingModule::nomination_locks_for(&user1_account_id).unwrap(), committed_1,
+			"Number of locked tokens is not stored correctly for user 1");
+
+		// Act: Account 2 submits nominations
+		let nominations_2 = BoundedVec::try_from(
+								vec![(10, 2),(11, 2),(12, 2),(13, 2),(14, 2),(15, 2),(16, 2),(17, 2),
+							  	 	 (18, 2),(19, 2),(20, 2),(21, 2),(22, 2),(23, 2),(24, 2),(25, 2)]).unwrap();
+		let committed_2 = 32;
+		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user2_account_id), nominations_2));
+
+		// Assert: The number of Account 2 locked tokens is recorded in storage
+		assert_eq!(LiquidStakingModule::nomination_locks_for(&user2_account_id).unwrap(), committed_2,
+			"Number of locked tokens is not stored correctly for user 2");
+
+		// Act: Account 1 submits more nominations
+		let nominations_3 = BoundedVec::try_from(
+								vec![(10, 1),(11, 1),(12, 1),(13, 1),(14, 1),(15, 1),(16, 1),(17, 1),
+							 	 	 (18, 0),(19, 0),(20, 0),(21, 0),(22, 0),(23, 0),(24, 0),(25, 0)]).unwrap();
+		let committed_3 = 8;
+		assert_ok!(LiquidStakingModule::nominate(Origin::signed(user1_account_id), nominations_3));
+
+		// Assert: More Account 1 tokens are locked and the total number of locked tokens is recorded in storage
 		assert_eq!(LiquidStakingModule::nomination_locks_for(&user1_account_id).unwrap(), committed_1 + committed_3,
 			"Number of locked tokens is not stored correctly for user 1");
 	});	
