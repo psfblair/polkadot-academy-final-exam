@@ -141,6 +141,10 @@ pub mod pallet {
 		/// than the free balance in the account.
 		InsufficientFundsForRedemption,
 
+		/// A request was made to redeem a auantity of derivative token but so many previous
+		/// redemptions are awaiting withdrawal that no additional redemptions may be performed.
+		TooManyRedemptionsAwaitingWithdrawal,
+
 		// A request to vote for validators has originated from an account that does not
 		// hold the derivative token, or at a time when voting is not taking place.
 		VoteUnauthorized,
@@ -277,7 +281,7 @@ pub mod pallet {
 									},
 									None => Err(Error::<T>::VoteQuantityInvalid),
 								},
-							None => existing_map.try_insert(era_available, amount),
+							None => existing_map.try_insert(era_available, amount).ok_or(Err(Error::<T>::TooManyRedemptionsAwaitingWithdrawal)),
 						}
 					}
 					None => {
