@@ -241,8 +241,8 @@ pub mod pallet {
 					Some(Zero::zero()), 
 					|accum: Option<BalanceTypeOf<T>>, (_, votes)| {
 						match accum {
+							Some(sum) => sum.checked_add(votes),
 							None => None,
-							Some(sum) => sum.checked_add(votes)
 						}
 					}
 			); 
@@ -264,7 +264,7 @@ pub mod pallet {
 						}
 					}
 					None => {
-						*maybe_existing_value = Some(total_voted)
+						*maybe_existing_value = Some(total_voted);
 						Ok(())
 					},
 				}
@@ -284,7 +284,7 @@ pub mod pallet {
 							}
 						},
 						None => {
-							*maybe_existing_value = Some(votes),
+							*maybe_existing_value = Some(votes);
 							Ok(())
 						}
 					}
