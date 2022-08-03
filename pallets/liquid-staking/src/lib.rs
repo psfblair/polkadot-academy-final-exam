@@ -256,7 +256,7 @@ pub mod pallet {
 			match T::StakingInterface::bond_extra(pot.clone(), amount) { // Confused: Shouldn't this be signed?
 
 				// See if we got an error because the pot was not yet bonded, by trying to bond it. If that fails, we bail.
-				Err(err) => T::StakingInterface::bond(pot.clone(), Self::controller_account_id(), amount, pot.clone())?,
+				Err(_err) => T::StakingInterface::bond(pot.clone(), Self::controller_account_id(), amount, pot.clone())?,
 				_ => ()
 			}
 
@@ -293,7 +293,7 @@ pub mod pallet {
 									None => Err(Error::<T>::VoteQuantityInvalid),
 								},
 							None => existing_map.try_insert(era_available, amount).map(
-								|maybe_key_existed| () // We know the key isn't actually already there because we checked it above. qed 
+								|_| () // We know the key isn't actually already there because we checked it above. qed 
 							).map_err(
 								|_| Error::<T>::TooManyRedemptionsAwaitingWithdrawal
 							),
@@ -371,7 +371,7 @@ pub mod pallet {
 				match maybe_existing_value {
 					Some(prior_amount) => {
 						match prior_amount.checked_add(&total_voted) {
-							maybe_total @ Some(total) => { 
+							maybe_total @ Some(_total) => { 
 								*maybe_existing_value = maybe_total; 
 								Ok(())
 							 },
@@ -391,7 +391,7 @@ pub mod pallet {
 					match maybe_existing_value {
 						Some(prior_amount) => {
 							match prior_amount.checked_add(&votes) {
-								maybe_total @ Some(total) => { 
+								maybe_total @ Some(_total) => { 
 									*maybe_existing_value = maybe_total; 
 									Ok(())
 								},
