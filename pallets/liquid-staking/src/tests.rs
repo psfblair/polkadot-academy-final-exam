@@ -7,7 +7,7 @@ use frame_support::{
 	BoundedVec, assert_noop, assert_ok
 };
 use frame_system::pallet::Pallet;
-use sp_staking::StakingInterface;
+use sp_staking::{StakingInterface, EraIndex};
 
 #[test]
 fn test_genesis_balances() {
@@ -279,7 +279,9 @@ fn redeem_stake_stores_quantity_of_derivative_token_redeemed_along_with_unbondin
 
 		// Assert Account 1 is due 20 dot at the end of the unbonding period:
 		// Mock sets us in Era 2 with a bonding duration of 3, so we expect to get them back in era 5
-		assert_eq!(LiquidStakingModule::redemptions_awaiting_withdrawal(user_account_id).unwrap(), vec![(20, 5)] );
+		let expected  = BoundedBTreeMap::<EraIndex, BalanceTypeOf<T>, LiquidStakingModule::WithdrawalBound>::new();
+		expected.try_insert(5, 20);
+		assert_eq!(LiquidStakingModule::redemptions_awaiting_withdrawal(user_account_id).unwrap(), expected );
 	});
 }
 
