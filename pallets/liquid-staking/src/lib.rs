@@ -197,7 +197,7 @@ pub mod pallet {
 							EraStartBlockNumber::<T>::put(block_number);
 							10 // TODO Figure out what weights should be 
 					} else {
-						match Self::era_start_block() 
+						match Self::era_start_block() {
 							// Otherwise, if we are the configured number of blocks from the beginning of the era
 							// (not using safe math here because we are in control of the configuration and the block numbers)
 							Some(era_start_block_number) => {
@@ -211,12 +211,16 @@ pub mod pallet {
 									100 // TODO Figure out what weights should be 
 								} else {
 									0 // Do nothing; TODO Figure out what weights should be 
-								},
+								}
+							},
 							None => 0 // Do nothing; TODO Figure out what weights should be 
 						}
 					},
-				// Record the current era so that we can update it when it rolls over
-				None => EraOfPreviousBlock::<T>::put(T::StakingInterface::current_era()),
+				// If we have no era for the previous block, initialize it to the current era so we can update it when it rolls over
+				None => {
+					EraOfPreviousBlock::<T>::put(T::StakingInterface::current_era());
+					10 // TODO Figure out what weights should be 
+				},
 			}
 		}
 	}
