@@ -20,6 +20,7 @@ type Block = frame_system::mocking::MockBlock<Test>;
 // But it works well with text search to keep the names distinct.
 type BalanceImpl = u128;
 type AccountIdImpl = u64;
+type BlockNumberImpl = u64;
 
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
@@ -42,7 +43,7 @@ parameter_types! {
 	pub const PalletIdImpl2: PalletId = PalletId(*b"py/lstkg");
 	pub const MinimumStakeImpl: BalanceImpl = 2;
 	pub const MaxValidatorNomineesImpl: u8 = 16;
-	pub const NominatorVotingPeriodBlocksImpl: frame_system::Config::BlockNumber = 600;  // Make voting happen in a 1-hour window if we're on Polkadot
+	pub const NominatorVotingPeriodBlocksImpl: BlockNumberImpl = 600;  // Make voting happen in a 1-hour window if we're on Polkadot
 	pub const WithdrawalBoundImpl: u8 = 20;
 	pub static ExistentialDepositImpl: BalanceImpl = 0;
 }
@@ -193,7 +194,7 @@ impl frame_system::Config for Test {
 	type Origin = Origin;
 	type Call = Call;
 	type Index = u64;
-	type BlockNumber = u64;
+	type BlockNumber = BlockNumberImpl;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
 	type AccountId = AccountIdImpl;
